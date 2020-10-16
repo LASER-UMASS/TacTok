@@ -1,8 +1,0 @@
--R . Exceptions
-
-leavemult.v
-
--extra test leavemult.vo
-	"@echo '********* Test on one example **********'
-	$(CAMLBIN)ocaml test.ml
-	@echo '************ End of test ***************'"

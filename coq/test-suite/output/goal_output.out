@@ -1,8 +1,0 @@
-Nat.t = nat
-     : Set
-Nat.t = nat
-     : Set
-1 subgoal
-  
-  ============================
-  False

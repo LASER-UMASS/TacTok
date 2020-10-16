@@ -1,8 +1,0 @@
-PKG unix laglgtk2 lablgtk2.sourceview2
-
-S utils
-B utils
-S protocol
-B protocol
-
-REC

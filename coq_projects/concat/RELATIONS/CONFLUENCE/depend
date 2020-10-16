@@ -1,2 +1,0 @@
-Confluence.vo: Confluence.v ../Relations.vo
-Coherence.vo: Coherence.v ../Relations.vo Confluence.vo

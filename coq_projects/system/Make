@@ -1,8 +1,0 @@
--R src Concurrency
-
-src/Computation.v
-src/Events.v
-src/Extraction.v
-src/Run.v
-src/StdLib.v
-src/Test.v

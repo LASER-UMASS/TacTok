@@ -1,4 +1,0 @@
-archive(byte)="foo.cma"
-archive(native)="foo.cmxa"
-linkopts="-linkall"
-requires="str"
