@@ -33,6 +33,9 @@ def parse_args():
 
     # term encoder
     parser.add_argument('--term_embedding_dim', type=int, default=256)
+    parser.add_argument('--num_tactics', type=int, default=15025)
+    parser.add_argument('--tac_vocab_file', type=str, default='token_vocab.pickle')
+    parser.add_argument('--cutoff_len', type=int, default=30)
 
     # tactic decoder
     parser.add_argument('--size_limit', type=int, default=50)

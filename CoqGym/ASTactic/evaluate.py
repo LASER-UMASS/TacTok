@@ -26,6 +26,8 @@ if __name__ == '__main__':
     parser.add_argument('--split', choices=['train', 'valid', 'test'], type=str, default='test')
     parser.add_argument('--file', type=str)
     parser.add_argument('--proof', type=str)
+    parser.add_argument('--file_idx', type=int)
+    parser.add_argument('--proj_idx', type=int)
     parser.add_argument('--filter', type=str)
     parser.add_argument('--path', type=str)
     parser.add_argument('--output_dir', type=str, default='evaluation')
@@ -43,6 +45,9 @@ if __name__ == '__main__':
     parser.add_argument('--symbol_dim', type=int, default=256, help='dimension of the terminal/nonterminal symbol embeddings')
     parser.add_argument('--hidden_dim', type=int, default=256, help='dimension of the LSTM controller')
     parser.add_argument('--seed', type=int, default=0)
+    parser.add_argument('--num_tactics', type=int, default=15025)
+    parser.add_argument('--tac_vocab_file', type=str, default='token_vocab.pickle')
+    parser.add_argument('--cutoff_len', type=int, default=30)
     opts = parser.parse_args()
     log(opts)
     opts.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -54,6 +59,8 @@ if __name__ == '__main__':
     torch.backends.cudnn.benchmark = False
     np.random.seed(opts.seed)
     random.seed(opts.seed)
+
+    projs_test = ["weak-up-to", "buchberger", "jordan-curve-theorem", "dblib", "disel", "zchinese", "zfc", "dep-map", "chinese", "UnifySL", "hoare-tut", "huffman", "PolTac", "angles", "coq-procrastination", "coq-library-undecidability", "tree-automata", "coquelicot", "fermat4", "demos", "coqoban", "goedel", "verdi-raft", "verdi", "zorns-lemma", "coqrel", "fundamental-arithmetics"]
 
     if 'ours' in opts.method:
         model = Prover(opts)
@@ -71,11 +78,16 @@ if __name__ == '__main__':
 
     if opts.file:
         files = [opts.file]
+    elif opts.proj_idx is not None:
+        files = glob(os.path.join(opts.datapath, '%s/**/*.json' % projs_test[opts.proj_idx]), recursive=True)
     else:
         files = []
         projs = json.load(open(opts.projs_split))['projs_' + opts.split]
         for proj in projs:
             files.extend(glob(os.path.join(opts.datapath, '%s/**/*.json' % proj), recursive=True))
+
+    if opts.file_idx is not None:
+        files = [files[opts.file_idx]]
 
     if opts.filter:
         files = [f for f in files if md5(f.encode('utf-8')).hexdigest().startswith(opts.filter)]
@@ -92,8 +104,10 @@ if __name__ == '__main__':
     oup_dir = os.path.join(opts.output_dir, opts.eval_id)
     if not os.path.exists(oup_dir):
          os.makedirs(oup_dir)
-    if opts.filter is None and opts.file is None:
-        oup_file = os.path.join(oup_dir, 'results.json')
+    if opts.filter is None and opts.file is None and opts.file_idx is None:
+        oup_file = os.path.join(oup_dir, 'results_%s.json' % str(opts.proj_idx))
+    elif opts.file_idx is not None:
+        oup_file = os.path.join(oup_dir, 'results_%s_%s.json' % (str(opts.proj_idx), str(opts.file_idx)))
     elif opts.file is None:
         oup_file = os.path.join(oup_dir, '%s.json' % opts.filter)
     elif opts.proof is None:

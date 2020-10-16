@@ -63,7 +63,7 @@ class ProofStepsData(Dataset):
 
 def create_dataloader(split, opts):
     def merge(batch):
-        fields = ['file', 'proof_name', 'n_step', 'env', 'local_context', 'goal', 'is_synthetic', 'tactic_actions', 'tactic_str']
+        fields = ['file', 'proof_name', 'n_step', 'env', 'local_context', 'goal', 'is_synthetic', 'tactic_actions', 'tactic_str', 'prev_tokens']
         data_batch = {key: [] for key in fields}
         for example in batch:
             for key, value in example.items():

@@ -8,7 +8,6 @@ from copy import deepcopy
 from tac_grammar import TerminalNode, NonterminalNode
 from lark.lexer import Token
 
-
 class AvgLoss:
     'Maintaining the average of a set of losses'
 
@@ -82,7 +81,7 @@ class TacticDecoder(nn.Module):
         self.lex_rule_embeddings = nn.Embedding(len(self.grammar.terminal_symbols), opts.embedding_dim)
         self.default_action_embedding = torch.zeros(self.opts.embedding_dim, device=self.opts.device)
         self.default_state = torch.zeros(self.opts.hidden_dim, device=self.opts.device)
-        self.controller = nn.GRUCell(2 * opts.embedding_dim + 2 * opts.term_embedding_dim + 6 + opts.hidden_dim + opts.symbol_dim, opts.hidden_dim)
+        self.controller = nn.GRUCell(2 * opts.embedding_dim + 2 * opts.term_embedding_dim + 6 + opts.hidden_dim + opts.symbol_dim + 512, opts.hidden_dim)
         self.state_decoder = nn.Sequential(nn.Linear(opts.hidden_dim, opts.embedding_dim), nn.Tanh())
         self.context_reader = ContextReader(opts)
         self.context_retriever = ContextRetriever(opts)
@@ -254,7 +253,7 @@ class TacticDecoder(nn.Module):
             return self.expand_terminal(node, expansion_step, environment, local_context, goal, actions_gt, teacher_forcing)
 
 
-    def forward(self, environment, local_context, goal, actions, teacher_forcing):
+    def forward(self, environment, local_context, goal, actions, teacher_forcing, seq_embeddings=None):
         if not teacher_forcing:
             # when train without teacher forcing, only consider the expansion of non-terminal nodes
             actions = [[a for a in act if isinstance(a, int)] for act in actions] 
@@ -278,7 +277,7 @@ class TacticDecoder(nn.Module):
             r = [torch.cat([environment[i]['embeddings'], local_context[i]['embeddings']], dim=0) for i in indice]
             u_t = self.context_reader(s_tm1, r)
 
-            states = self.controller(torch.cat([a_tm1, goal['embeddings'][indice], u_t, p_t, n_t], dim=1), s_tm1)
+            states = self.controller(torch.cat([a_tm1, goal['embeddings'][indice], u_t, p_t, n_t, seq_embeddings[indice]], dim=1), s_tm1)
 
             # store states and expand nodes
             for j, idx in enumerate(indice):
@@ -330,7 +329,7 @@ class TacticDecoder(nn.Module):
         return new_ast, new_stack
 
 
-    def beam_search(self, environment, local_context, goal):
+    def beam_search(self, environment, local_context, goal, seq_embeddings=None):
         # initialize the trees in the beam
         assert goal['embeddings'].size(0) == 1  # only support batchsize == 1
         beam, frontiers = self.initialize_trees(1)
@@ -353,7 +352,7 @@ class TacticDecoder(nn.Module):
             r = [torch.cat([environment['embeddings'], local_context['embeddings']], dim=0) for i in indice]
             u_t = self.context_reader(s_tm1, r)
 
-            states = self.controller(torch.cat([a_tm1, goal['embeddings'].expand(len(indice), -1), u_t, p_t, n_t], dim=1), s_tm1)
+            states = self.controller(torch.cat([a_tm1, goal['embeddings'].expand(len(indice), -1), u_t, p_t, n_t, seq_embeddings.expand(len(indice), -1)], dim=1), s_tm1)
 
             # compute the log likelihood and pick the top candidates
             beam_candidates = []

@@ -15,7 +15,8 @@ from hashlib import sha1
 import gc
 from copy import deepcopy
 from time import time
-
+import numpy as np
+import string
 
 def action_seq_loss(logits_batch, actions_batch, opts):
     assert len(logits_batch) == len(actions_batch)
@@ -32,10 +33,8 @@ term_parser = GallinaTermParser(caching=True)
 sexp_cache = SexpCache('../sexp_cache', readonly=True)
 
 def filter_env(env):
-    "Get the last 10 toplevel constants"
     filtered_env = []
-    toplevel_consts = [const for const in env['constants'] if const['qualid'].startswith('SerTop')]
-    for const in toplevel_consts[-10:]:
+    for const in [const for const in env['constants'] if const['qualid'].startswith('SerTop')][-10:]:
         ast = sexp_cache[const['sexp']]
         filtered_env.append({'qualid': const['qualid'], 'ast': term_parser.parse(ast)})
     return filtered_env
@@ -49,6 +48,21 @@ def parse_goal(g):
             local_context.append({'ident': ident, 'text': h['type'], 'ast': term_parser.parse(h['sexp'])})
     return local_context, goal['ast']
 
+rem_punc = string.punctuation.replace('\'','').replace('_', '')
+table = str.maketrans('', '', rem_punc)
+
+def tokenize_text(raw_text):
+    without_punc = raw_text.translate(table)
+    words = without_punc.split()
+    return words
+
+def parse_script(script):
+    prev_seq = []
+    for tac in script:
+        tac_words = tokenize_text(tac)
+        prev_seq += tac_words
+
+    return prev_seq
 
 def print_single_goal(g):
     for h in g['hypotheses']:
@@ -100,7 +114,7 @@ class Agent:
         for i, data_batch in enumerate(self.dataloader['train']):
             use_teacher_forcing = random() < self.opts.teacher_forcing
             asts, loss = self.model(data_batch['env'], data_batch['local_context'], 
-                                    data_batch['goal'], data_batch['tactic_actions'], use_teacher_forcing)
+                                    data_batch['goal'], data_batch['tactic_actions'], use_teacher_forcing, data_batch['prev_tokens'])
             log('\nteacher forcing = %s, loss = %f' % (str(use_teacher_forcing), loss.item()))
             self.optimizer.zero_grad()
             loss.backward()
@@ -124,7 +138,7 @@ class Agent:
 
         for i, data_batch in enumerate(self.dataloader['valid']):
             asts, loss = self.model(data_batch['env'], data_batch['local_context'],
-                                    data_batch['goal'], data_batch['tactic_actions'], False)
+                                    data_batch['goal'], data_batch['tactic_actions'], False, data_batch['prev_tokens'])
             loss_avg += loss.item()
 
             for n in range(len(data_batch['file'])):
@@ -202,6 +216,9 @@ class Agent:
 
     def prove(self, proof_env):
         'prove a theorem interactively'
+        if 'greedy' in self.opts.method or 'weighed' in self.opts.method:
+            tac_template = '%s.'
+            return self.prove_DFS(proof_env, tac_template)
         if 'ours' not in self.opts.method:  # auto, hammer, etc.
             return self.prove_one_tactic(proof_env, self.opts.method)
 
@@ -221,8 +238,31 @@ class Agent:
 
         # initialize the stack
         local_context, goal = parse_goal(obs['fg_goals'][0])
-        tactics = self.model.beam_search(env, local_context, goal)
-        stack = [[tac_template % tac.to_tokens() for tac in tactics[::-1]]]
+
+        f_top = open("baselines/top.pickle", 'rb')
+        f_tac = open("baselines/tactic_list.pickle", 'rb')
+        f_prob = open("baselines/tactic_probs.pickle", 'rb')
+        top = pickle.load(f_top)
+        tactic_list = pickle.load(f_tac)
+        tactic_probs = pickle.load(f_prob)
+        f_top.close()
+        f_tac.close()
+        f_prob.close() 
+
+        tactics = []
+        stack = [[]]
+        if 'greedy' in self.opts.method:
+            # choose from top
+            tactics = top 
+            stack = [[tac_template % tac for tac in tactics[::-1]]]
+        elif 'weighed' in self.opts.method:
+            # choose from distribution
+            tactics = np.random.choice(tactic_list,size=20,replace=False, p=tactic_probs)
+            stack = [[tac_template % tac for tac in tactics[::-1]]]
+        else:
+            tactics = self.model.beam_search(env, local_context, goal, [])
+            stack = [[tac_template % tac.to_tokens() for tac in tactics[::-1]]]
+        
         script = []
 
         # depth-first search starting from the trace
@@ -262,8 +302,20 @@ class Agent:
                     continue
                 first_goal_signatures.add(sig)
                 local_context, goal = parse_goal(obs['fg_goals'][0])
-                tactics = self.model.beam_search(env, local_context, goal)
-                stack.append([tac_template % tac.to_tokens() for tac in tactics[::-1]])
+                tactics = []
+                if 'greedy' in self.opts.method:
+                    # choose from top
+                    tactics = top 
+                    stack.append([tac_template % tac for tac in tactics[::-1]])
+                elif 'weighed' in self.opts.method:
+                    # choose from distribution
+                    tactics = np.random.choice(tactic_list,size=20,replace=False, p=tactic_probs)
+                    stack.append([tac_template % tac for tac in tactics[::-1]])
+                else:
+                    prev_seq = parse_script(script)
+                    tactics = self.model.beam_search(env, local_context, goal, prev_seq)
+                    stack.append([tac_template % tac.to_tokens() for tac in tactics[::-1]])
+                
 
         obs = proof_env.step('Admitted.')
         print(obs['result'])
@@ -296,7 +348,8 @@ class Agent:
                     return False, script, time, num_tactics
                 # initialize the stack
                 local_context, goal = parse_goal(obs['fg_goals'][0])
-                tactics = self.model.beam_search(env, local_context, goal)
+                prev_seq = parse_script(script)    
+                tactics = self.model.beam_search(env, local_context, goal, prev_seq)
                 stack = [[tac_template % tac.to_tokens() for tac in tactics[::-1]]]
 
                 # depth-first search starting from the trace
@@ -338,7 +391,8 @@ class Agent:
                             continue
                         first_goal_signatures.add(sig)
                         local_context, goal = parse_goal(obs['fg_goals'][0])
-                        tactics = self.model.beam_search(env, local_context, goal)
+                        prev_seq = parse_script(script)
+                        tactics = self.model.beam_search(env, local_context, goal, prev_seq)
                         stack.append([tac_template % tac.to_tokens() for tac in tactics[::-1]])
 
                 proof_env.step('Restart.')
