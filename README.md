@@ -1,12 +1,10 @@
 # TacTok
 The TacTok automated Coq proof script synthesis tool
 
-Paper: 
-TacTok: Semantics-Aware Proof Synthesis
-Emily First, Yuriy Brun, and Arjun Guha
+The TacTok technique and its evaluation are described in [TacTok: Semantics-Aware Proof Synthesis](https://people.cs.umass.edu/~brun/pubs/pubs/First20oopsla.pdf) by Emily First, Yuriy Brun, and Arjun Guha, in Proceedings of the ACM on Programming Languages (PACMPL) Object-Oriented Programming, Systems, Languages, and Applications (OOPSLA) issue, vol. 4, November 2020, pp. 149:1-149:26, doi: [10.1145/3428299](http://dx.doi.org/10.1145/3428299).
 
-We have made available a replication package for the results in the paper. It is a VirtualBox VM: [here](http://doi.org/10.5281/zenodo.4088897)
-This includes the result files, scripts for processing the results, pre-trained models, directions & code for running the pre-trained models, and training examples used in the paper. The VM does not support training models.
+We have made available a replication package for the results in the paper. It is a VirtualBox VM: [here](http://doi.org/10.5281/zenodo.4088897).
+This includes the result files, scripts for processing the results, pre-trained models, directions and code for running the pre-trained models, and training examples used in the paper. The VM does not support training models.
 
 The following are the directions for installation and use of TacTok.
 
@@ -47,7 +45,7 @@ This generates a `*.json` file in `./data/` corresponding to each `*.meta` file.
 
 ### Download the CoqGym dataset
 
-1. Download the CoqGym dataset (don't need to extract proofs from Coq projects)
+1. Download the CoqGym dataset (you do not need to extract proofs from Coq projects)
 [here](https://drive.google.com/drive/folders/149m_17VkYYkl0kdSB4AI8zodCuTmPaA6?usp=sharing)
 2. Unzip the data and set the paths: `python unzip_data.py`
 
