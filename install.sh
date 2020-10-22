@@ -24,7 +24,7 @@ cd ..
 echo "SerAPI installed"
 
 echo "Installing CoqHammer.."
-cd ASTactic/coqhammer
+cd TacTok/coqhammer
 make
 make install
 cd ../..
