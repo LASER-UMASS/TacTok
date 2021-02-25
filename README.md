@@ -51,8 +51,9 @@ This generates a `*.json` file in `./data/` corresponding to each `*.meta` file.
 
 ### Training Examples (proof steps)
 
-1. Proofs steps used in the paper are found in `processed.tar.gz`, which can be downloaded from the replication package link provided above. This should be copied into `TacTok/TacTok`
+1. Proofs steps used in the paper are found in `processed.tar.gz`, which can be downloaded from the replication package link provided above. This should be copied into `TacTok/`
 2. To extract new proofs, run `python extract_proof_steps.py`.
+3. To generate new proof steps that have `prev_tokens` field, run `python process_proof_steps.py`. This will generate `processed/proof_steps`.
 
 ## 4. Training TacTok 
 
