@@ -32,16 +32,16 @@ def parse_args():
     parser.add_argument('--filter', type=str)
 
     # term encoder
-    parser.add_argument('--term_embedding_dim', type=int, default=256)
+    parser.add_argument('--term_embedding_dim', type=int, default=128)
     parser.add_argument('--num_tactics', type=int, default=15025)
     parser.add_argument('--tac_vocab_file', type=str, default='token_vocab.pickle')
     parser.add_argument('--cutoff_len', type=int, default=30)
 
     # tactic decoder
     parser.add_argument('--size_limit', type=int, default=50)
-    parser.add_argument('--embedding_dim', type=int, default=256, help='dimension of the grammar embeddings')
-    parser.add_argument('--symbol_dim', type=int, default=256, help='dimension of the terminal/nonterminal symbol embeddings')
-    parser.add_argument('--hidden_dim', type=int, default=256, help='dimension of the LSTM controller')
+    parser.add_argument('--embedding_dim', type=int, default=128, help='dimension of the grammar embeddings')
+    parser.add_argument('--symbol_dim', type=int, default=128, help='dimension of the terminal/nonterminal symbol embeddings')
+    parser.add_argument('--hidden_dim', type=int, default=128, help='dimension of the LSTM controller')
 
     parser.add_argument('--teacher_forcing', type=float, default=1.0)
 
