@@ -67,6 +67,7 @@ nonterminals = [
     'constr__prec_declaration___constr__constr____constr__constr',
     'constr__pfixpoint___constr__constr____constr__constr',
     'constr__pcofixpoint___constr__constr____constr__constr',
+    'names__id__t'
 ]
 
 

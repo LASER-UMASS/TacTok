@@ -51,7 +51,8 @@ class GallinaTermParser:
         traverse_postorder(ast, get_quantified_idents)
         ast.quantified_idents = list(ast.quantified_idents)
 
-        def compute_height_remove_token(node):
+        # Postprocess: compute height, remove some tokens (variable names), make identifiers explicit
+        def postprocess(node):
             children = []
             node.height = 0
             for c in node.children:
@@ -60,10 +61,16 @@ class GallinaTermParser:
                     children.append(c)
                 # Don't erase fully-qualified names
                 elif node.data == 'names__label__t' or node.data == 'constructor_dirpath' or node.data == 'constructor_mpfile':
-                    children.append(c)
+                    # Just make everything a nonterminal for compatibility
+                    ident_value = Tree(c.value, [])
+                    ident_wrapper = Tree('names__id__t', [ident_value])
+                    ident_value.height = 0
+                    ident_wrapper.height = 1
+                    node.height = 2
+                    children.append(ident_wrapper)
             node.children = children
 
-        traverse_postorder(ast, compute_height_remove_token)
+        traverse_postorder(ast, postprocess)
         return ast
 
 
@@ -71,6 +78,8 @@ class GallinaTermParser:
         if self.caching:
             if term_str not in self.cache:
                 self.cache[term_str] = self.parse_no_cache(term_str)
+            print(self.cache[term_str])
+            print("\n")
             return self.cache[term_str]
         else:
             return self.parse_no_cache(term_str)
