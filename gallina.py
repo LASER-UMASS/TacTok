@@ -78,8 +78,6 @@ class GallinaTermParser:
         if self.caching:
             if term_str not in self.cache:
                 self.cache[term_str] = self.parse_no_cache(term_str)
-            print(self.cache[term_str])
-            print("\n")
             return self.cache[term_str]
         else:
             return self.parse_no_cache(term_str)
