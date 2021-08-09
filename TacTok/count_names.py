@@ -14,14 +14,22 @@ from lark.tree import Tree
 
 projs_split = json.load(open('../projs_split.json'))
 
-ind_names = {}
-const_names = {}
+# For now we are naive and lump everything into one bucket,
+# whether it's the name of a file or a datatype.
+# The AST orders these meaningfully, so hopefully the model reflects the meaning in the end.
+idents = {}
 
 term_parser = GallinaTermParser(caching=True)
 sexp_cache = SexpCache('../sexp_cache', readonly=True)
 
 def parse_goal(g):
     return term_parser.parse(sexp_cache[g['sexp']])
+
+def incr_ident(ident):
+    if ident not in idents:
+        idents[ident] = 1
+    else:
+        idents[ident] += 1
 
 def count(filename, proof_data):
     #TODO add back after testing
@@ -36,17 +44,12 @@ def count(filename, proof_data):
     # count occurrences within a goal
     def count_in_goal(node):
         if node.data == 'constructor_mutind':
-            fq_name = ""
             modpath = node.children[0].children[0]
-            for c in reversed(modpath.children):
-                fq_name += c.children[0].data
-                fq_name += "."
+            for c in modpath.children:
+                ident = c.children[0].data
+                incr_ident(ident)
             ident = node.children[2].children[0].children[0].data
-            fq_name += ident
-            if fq_name not in ind_names:
-                ind_names[fq_name] = 1
-            else:
-                ind_names[fq_name] += 1
+            incr_ident(ident)
         #elif node.data == 'constructor_constant':
             # TODO! same kinda thing
             #print(node)
@@ -75,8 +78,7 @@ if __name__ == '__main__':
 
     iter_proofs(args.data_root, count, include_synthetic=False, show_progress=True)
 
-    print(ind_names)
-    print(const_names)
+    print(idents)
 
     #for split in ['train', 'valid']:
         #for i, step in enumerate(proof_steps[split]):
