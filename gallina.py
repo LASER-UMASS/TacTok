@@ -60,7 +60,7 @@ class GallinaTermParser:
                     node.height = max(node.height, c.height + 1)
                     children.append(c)
                 # Don't erase fully-qualified names
-                elif node.data == 'names__label__t' or node.data == 'constructor_dirpath' or node.data == 'constructor_mpfile':
+                elif node.data == 'names__label__t' or node.data == 'constructor_dirpath':
                     # Just make everything a nonterminal for compatibility
                     ident_value = Tree(c.value, [])
                     ident_wrapper = Tree('names__id__t', [ident_value])

@@ -1,5 +1,6 @@
 import os
 import json
+import pickle
 import sys
 sys.setrecursionlimit(100000)
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../')))
@@ -32,6 +33,11 @@ def incr_ident(ident):
     else:
         idents[ident] += 1
 
+def incr_idents(dirpath):
+    for c in dirpath.children:
+        ident = c.children[0].data
+        incr_ident(ident)
+
 def count(filename, proof_data):
     #TODO add back after testing
     #proj = filename.split(os.path.sep)[2]
@@ -45,10 +51,15 @@ def count(filename, proof_data):
     # count occurrences within a goal
     def count_in_goal(node):
         if node.data == 'constructor_mutind' or node.data == 'constructor_constant':
-            dirpath = node.children[0].children[0]
-            for c in dirpath.children:
-                ident = c.children[0].data
-                incr_ident(ident)
+            # modpath, like Coq.Init.Datatypes
+            mp_dirpath = node.children[0].children[0]
+            incr_idents(mp_dirpath)
+
+            # dirpath, when an import uses From 
+            dirpath = node.children[1]
+            incr_idents(dirpath)
+
+            # ident, like nat            
             ident = node.children[2].children[0].children[0].data
             incr_ident(ident)
         else:
