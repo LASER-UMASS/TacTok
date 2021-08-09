@@ -33,11 +33,6 @@ def incr_ident(ident):
     else:
         idents[ident] += 1
 
-def incr_idents(dirpath):
-    for c in dirpath.children:
-        ident = c.children[0].data
-        incr_ident(ident)
-
 def count(filename, proof_data):
     proj = filename.split(os.path.sep)[2]
     if not proj in projs_split['projs_train']:
@@ -49,23 +44,13 @@ def count(filename, proof_data):
 
     # count occurrences within a goal
     def count_in_goal(node):
-        if node.data == 'constructor_mutind' or node.data == 'constructor_constant':
-            # modpath, like Coq.Init.Datatypes
-            mp_dirpath = node.children[0].children[0]
-            incr_idents(mp_dirpath)
-
-            # dirpath, when an import uses From 
-            dirpath = node.children[1]
-            incr_idents(dirpath)
-
-            # ident, like nat            
-            ident = node.children[2].children[0].children[0].data
+        if node.data == 'names__id__t':   
+            ident = node.children[0].data
             incr_ident(ident)
         else:
             children = []
             for c in node.children:
                 if isinstance(c, Tree):
-                    node.height = max(node.height, c.height + 1)
                     children.append(c)
             node.children = children
 
@@ -85,6 +70,7 @@ if __name__ == '__main__':
     dirname = args.output
     if not os.path.exists(dirname):
         os.makedirs(dirname)
+
     pickle.dump(idents, open(os.path.join(dirname, 'names.pickle'), 'wb'))
 
     print('output saved to ', args.output)
