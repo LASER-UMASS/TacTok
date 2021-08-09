@@ -15,8 +15,9 @@ from lark.tree import Tree
 projs_split = json.load(open('../projs_split.json'))
 
 # For now we are naive and lump everything into one bucket,
-# whether it's the name of a file or a datatype.
+# whether it's the name of a module, datatype, or constant.
 # The AST orders these meaningfully, so hopefully the model reflects the meaning in the end.
+# If not, there are simple changes we can make later to reflect that.
 idents = {}
 
 term_parser = GallinaTermParser(caching=True)
@@ -43,20 +44,13 @@ def count(filename, proof_data):
 
     # count occurrences within a goal
     def count_in_goal(node):
-        if node.data == 'constructor_mutind':
-            modpath = node.children[0].children[0]
-            for c in modpath.children:
+        if node.data == 'constructor_mutind' or node.data == 'constructor_constant':
+            dirpath = node.children[0].children[0]
+            for c in dirpath.children:
                 ident = c.children[0].data
                 incr_ident(ident)
             ident = node.children[2].children[0].children[0].data
             incr_ident(ident)
-        #elif node.data == 'constructor_constant':
-            # TODO! same kinda thing
-            #print(node)
-            #if node not in const_names:
-                #const_names[node] = 1
-            #else:
-                #const_names[node] += 1s
         else:
             children = []
             for c in node.children:
