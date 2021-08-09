@@ -39,10 +39,9 @@ def incr_idents(dirpath):
         incr_ident(ident)
 
 def count(filename, proof_data):
-    #TODO add back after testing
-    #proj = filename.split(os.path.sep)[2]
-    #if not proj in projs_split['projs_train']:
-        #return
+    proj = filename.split(os.path.sep)[2]
+    if not proj in projs_split['projs_train']:
+        return
 
     proof_start = proof_data['steps'][0]
     goal_id = proof_start['goal_ids']['fg'][0]
@@ -83,16 +82,9 @@ if __name__ == '__main__':
 
     iter_proofs(args.data_root, count, include_synthetic=False, show_progress=True)
 
-    print(idents)
+    dirname = args.output
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
+    pickle.dump(idents, open(os.path.join(dirname, 'names.pickle'), 'wb'))
 
-    #for split in ['train', 'valid']:
-        #for i, step in enumerate(proof_steps[split]):
-            #dirname = os.path.join(args.output, split)
-            #if not os.path.exists(dirname):
-                #os.makedirs(dirname)
-            #if args.filter:
-                #pickle.dump(step, open(os.path.join(dirname, '%s-%08d.pickle' % (args.filter, i)), 'wb'))
-            #else:
-                #pickle.dump(step, open(os.path.join(dirname, '%08d.pickle' % i), 'wb'))
-
-    #print('output saved to ', args.output)
+    print('output saved to ', args.output)
