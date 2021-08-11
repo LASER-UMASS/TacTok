@@ -71,6 +71,8 @@ if __name__ == '__main__':
     if not os.path.exists(dirname):
         os.makedirs(dirname)
 
-    pickle.dump(idents, open(os.path.join(dirname, 'names.pickle'), 'wb'))
+    names_file = open(os.path.join(dirname, 'names.pickle'), 'wb')
+    pickle.dump(idents, names_file)
+    names_file.close()
 
     print('output saved to ', args.output)
