@@ -1,5 +1,4 @@
 import os
-import json
 import pickle
 import sys
 sys.setrecursionlimit(100000)
@@ -57,5 +56,4 @@ if __name__ == '__main__':
 
     dump_outputs(known, 'known')
     dump_outputs(unknown, 'unknown')
-
 
