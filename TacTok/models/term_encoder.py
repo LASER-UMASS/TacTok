@@ -9,7 +9,7 @@ from lark.tree import Tree
 import os
 from gallina import traverse_postorder
 import pdb
-
+import pickle
 
 nonterminals = [
     'constr__constr',
@@ -70,6 +70,9 @@ nonterminals = [
     'names__id__t'
 ]
 
+# The identifier vocabulary (file path should go in options eventually)
+ident_vocab = list(pickle.load(open('./names/names-known-200.pickle', 'rb')).keys())
+ident_vocab += ['<unk>']
 
 class InputOutputUpdateGate(nn.Module):
 
