@@ -12,11 +12,16 @@ import re
 import pdb
 
 
-def traverse_postorder(node, callback):
+def traverse_postorder(node, callback, parent_info=None, get_parent_info=None):
+    if get_parent_info is not None:
+        parent_info = get_parent_info(node, parent_info)
     for c in node.children:
         if isinstance(c, Tree):
-            traverse_postorder(c, callback)
-    callback(node)
+            traverse_postorder(c, callback, parent_info, get_parent_info)
+    if get_parent_info is not None:
+        callback(node, parent_info)
+    else:
+        callback(node)
 
 
 class GallinaTermParser:
@@ -52,7 +57,7 @@ class GallinaTermParser:
         ast.quantified_idents = list(ast.quantified_idents)
 
         # Postprocess: compute height, remove some tokens (variable names), make identifiers explicit
-        def postprocess(node):
+        def postprocess(node, is_construct_child):
             children = []
             node.height = 0
             for c in node.children:
@@ -68,9 +73,16 @@ class GallinaTermParser:
                     ident_wrapper.height = 1
                     node.height = 2
                     children.append(ident_wrapper)
+                # Don't erase the node if it is part of a constructor
+                elif is_construct_child:
+                    children.append(c)
             node.children = children
 
-        traverse_postorder(ast, postprocess)
+        def get_is_construct_child(node, is_construct_child):
+            return is_construct_child or node.data == "constructor_construct"
+
+        traverse_postorder(ast, postprocess, False, get_is_construct_child)
+        print(ast.pretty())
         return ast
 
 
@@ -84,7 +96,7 @@ class GallinaTermParser:
 
 
     def print_grammar(self):
-        print(self.grammar)    
+        print(self.grammar)
 
 
 class Counter(Visitor):
@@ -111,4 +123,3 @@ class TreeNumTokens(Transformer):
 
     def __default__(self, symbol, children, meta):
         return sum([1 if isinstance(c, Token) else c for c in children])
-
