@@ -11,6 +11,9 @@ from collections import defaultdict
 import re
 import pdb
 
+# Options to train different models---move before merging
+include_defs = True # include theorem and definition names
+include_locals = True # include local variable names
 
 def traverse_postorder(node, callback):
     for c in node.children:
@@ -59,8 +62,8 @@ class GallinaTermParser:
                 if isinstance(c, Tree):
                     node.height = max(node.height, c.height + 1)
                     children.append(c)
-                # Don't erase fully-qualified names
-                elif node.data == 'names__label__t' or node.data == 'constructor_dirpath':
+                # Don't erase fully-qualified definition & theorem names
+                elif include_defs and (node.data == 'names__label__t' or node.data == 'constructor_dirpath'):
                     # Just make everything a nonterminal for compatibility
                     ident_value = Tree(c.value, [])
                     ident_wrapper = Tree('names__id__t', [ident_value])
@@ -68,6 +71,13 @@ class GallinaTermParser:
                     ident_wrapper.height = 1
                     node.height = 2
                     children.append(ident_wrapper)
+                # Don't erase local variable names
+                elif include_locals and node.data == 'constructor_var':
+                    # Just make everything a nonterminal for compatibility
+                    var_value = Tree(c.value, [])
+                    var_value.height = 0
+                    node.height = 1
+                    children.append(var_value)
             node.children = children
 
         traverse_postorder(ast, postprocess)
