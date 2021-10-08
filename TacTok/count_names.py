@@ -10,7 +10,7 @@ import argparse
 from utils import iter_proofs, SexpCache
 from lark.tree import Tree
 
-# Count occurrences of named datatypes and constants in the training data.
+# Count occurrences of names in the training data.
 # Based heavily on extract_proof_steps for the boilerplate.
 
 projs_split = json.load(open('../projs_split.json'))
@@ -21,6 +21,7 @@ projs_split = json.load(open('../projs_split.json'))
 # If not, there are simple changes we can make later to reflect that.
 idents = {}
 
+get_locals = False
 term_parser = GallinaTermParser(caching=True)
 sexp_cache = SexpCache('../sexp_cache', readonly=True)
 
@@ -33,6 +34,12 @@ def incr_ident(ident):
     else:
         idents[ident] += 1
 
+def is_name(node):
+    if get_locals:
+        return node.data == 'constructor_var' or node.data == 'constructor_name'
+    else:
+        return node.data == 'names__id__t'
+
 def count(filename, proof_data):
     proj = filename.split(os.path.sep)[2]
     if not proj in projs_split['projs_train']:
@@ -44,7 +51,7 @@ def count(filename, proof_data):
 
     # count occurrences within a goal
     def count_in_goal(node):
-        if node.data == 'names__id__t':   
+        if is_name(node):
             ident = node.children[0].data
             incr_ident(ident)
         else:
@@ -62,8 +69,11 @@ if __name__ == '__main__':
                                 help='The folder for CoqGym')
     arg_parser.add_argument('--output', type=str, default='./names/',
                                 help='The output file')
+    arg_parser.add_argument('--locals', action='store_true', help='Get local names instead of global names')
     args = arg_parser.parse_args()
     print(args)
+    
+    get_locals = args.locals
 
     iter_proofs(args.data_root, count, include_synthetic=False, show_progress=True)
 
@@ -71,7 +81,11 @@ if __name__ == '__main__':
     if not os.path.exists(dirname):
         os.makedirs(dirname)
 
-    names_file = open(os.path.join(dirname, 'names.pickle'), 'wb')
+    filename = 'names.pickle'
+    if get_locals: # I apologize to the functional programming gods, but Python is so confusing
+        filename = 'locals.pickle'
+
+    names_file = open(os.path.join(dirname, filename), 'wb')
     pickle.dump(idents, names_file)
     names_file.close()
 

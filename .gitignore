@@ -1,2 +1,4 @@
 *.vo
 *.pyc
+*.glob
+*.aux
