@@ -72,7 +72,7 @@ class GallinaTermParser:
                     node.height = 2
                     children.append(ident_wrapper)
                 # Don't erase local variable names
-                elif include_locals and node.data == 'constructor_var':
+                elif include_locals and (node.data == 'constructor_var' or node.data == 'constructor_name'):
                     # Just make everything a nonterminal for compatibility
                     var_value = Tree(c.value, [])
                     var_value.height = 0
