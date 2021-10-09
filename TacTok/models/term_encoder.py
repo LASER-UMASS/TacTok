@@ -11,6 +11,10 @@ from gallina import traverse_postorder
 import pdb
 import pickle
 
+# Options to train different models---move before merging
+include_defs = True # include theorem and definition names
+include_locals = True # include local variable names
+
 nonterminals = [
     'constr__constr',
     'constructor_rel',
@@ -73,9 +77,18 @@ nonterminals = [
 # The identifier vocabulary (file path should go in options eventually)
 path = './names/names-known-200.pickle'
 ident_vocab = list(pickle.load(open(path, 'rb')).keys())
-ident_vocab += ['<unk>']
+ident_vocab += '[<unk-ident>]'
 
-vocab = nonterminals + ident_vocab
+# The local variable vocabulary (same)
+path = './names/locals-known-40.pickle'
+locals_vocab = list(pickle.load(open(path, 'rb')).keys())
+locals_vocab += '[<unk-local>]'
+
+vocab = nonterminals
+if include_defs:
+    vocab += ident_vocab
+if include_locals:
+    vocab += locals_vocab
 
 class InputOutputUpdateGate(nn.Module):
 
@@ -140,12 +153,15 @@ class TermEncoder(nn.Module):
         self.output_gate = InputOutputUpdateGate(opts.term_embedding_dim, nonlinear=torch.sigmoid)
         self.update_cell = InputOutputUpdateGate(opts.term_embedding_dim, nonlinear=torch.tanh)
 
-
+    # TODO: need a way to know if under a name/var node, and if so, use unk-local
+    # Requires tracking parents somehow, which is moderately annoying
+    # Probably quickest way is to add the relevant info in the postorder pass when
+    # you call get_height.
     def get_vocab_idx(self, data):
         if data in vocab:
             return vocab.index(data) 
         else:
-            return vocab.index(['<unk>'])
+            return vocab.index(['<unk-ident>'])
 
     def forward(self, term_asts):
         # the height of a node determines when it can be processed
