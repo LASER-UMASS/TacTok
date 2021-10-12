@@ -153,25 +153,27 @@ class TermEncoder(nn.Module):
         self.output_gate = InputOutputUpdateGate(opts.term_embedding_dim, nonlinear=torch.sigmoid)
         self.update_cell = InputOutputUpdateGate(opts.term_embedding_dim, nonlinear=torch.tanh)
 
-    # TODO: need a way to know if under a name/var node, and if so, use unk-local
-    # Requires tracking parents somehow, which is moderately annoying
-    # Probably quickest way is to add the relevant info in the postorder pass when
-    # you call get_height.
-    def get_vocab_idx(self, data):
+    def get_vocab_idx(self, node, localnodes):
+        data = node.data
         if data in vocab:
             return vocab.index(data) 
+        elif node in localnodes:
+            return vocab.index(['<unk-local>'])
         else:
             return vocab.index(['<unk-ident>'])
 
     def forward(self, term_asts):
         # the height of a node determines when it can be processed
         height2nodes = defaultdict(set)
-
-        def get_height(node):
+        localnodes = set()
+        
+        def get_metadata(node):
             height2nodes[node.height].add(node)
+            if include_locals and (node.data == 'constructor_var' or node.data == 'constructor_name'):
+                localnode.updates(node.children)
 
         for ast in term_asts:
-            traverse_postorder(ast, get_height)
+            traverse_postorder(ast, get_metadata)
 
         memory_cells = {} # node -> memory cell
         hidden_states = {} # node -> hidden state
@@ -184,7 +186,7 @@ class TermEncoder(nn.Module):
             h_sum = []
             c_remains = []
             x = torch.zeros(len(nodes_at_height), len(vocab), device=self.opts.device) \
-                     .scatter_(1, torch.tensor([self.get_vocab_idx(node.data) for node in nodes_at_height], 
+                     .scatter_(1, torch.tensor([self.get_vocab_idx(node, localnodes) for node in nodes_at_height], 
                                                  device=self.opts.device).unsqueeze(1), 1.0)
 
             h_sum = torch.zeros(len(nodes_at_height), self.opts.term_embedding_dim).to(self.opts.device)
