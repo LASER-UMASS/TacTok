@@ -145,7 +145,7 @@ class TermEncoder(nn.Module):
         if data in vocab:
             return vocab.index(data) 
         else:
-            return vocab.index(['<unk>'])
+            return vocab.index('<unk>')
 
     def forward(self, term_asts):
         # the height of a node determines when it can be processed
