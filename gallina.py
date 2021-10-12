@@ -5,6 +5,7 @@ from lark import Lark, Transformer, Visitor, Discard
 from lark.lexer import Token
 from lark.tree import Tree
 from lark.tree import pydot__tree_to_png
+from serapi import SerAPI
 import logging
 logging.basicConfig(level=logging.DEBUG)
 from collections import defaultdict
@@ -13,16 +14,44 @@ import pdb
 
 
 def traverse_postorder(node, callback, parent_info=None, get_parent_info=None):
+    old_parent_info = parent_info
     if get_parent_info is not None:
         parent_info = get_parent_info(node, parent_info)
     for c in node.children:
         if isinstance(c, Tree):
             traverse_postorder(c, callback, parent_info, get_parent_info)
     if get_parent_info is not None:
-        callback(node, parent_info)
+        callback(node, old_parent_info)
     else:
         callback(node)
 
+SERAPI = SerAPI(600)
+
+CONSTRUCTOR_NONTERMINALS = {
+    'constructor_construct': '(Construct ({0} {1}))',
+    'constructor_ulevel':  '(ULevel {})',
+    'names__label__t': '{}',
+    'names__constructor': '({0} {1})',
+    'names__inductive': '({0} {1})',
+    'constructor_mutind': '(Mutind {0} {1} {2})',
+    'constructor_mpfile': '(MPfile {})',
+    'constructor_mpbound': '(MPbound {})',
+    'constructor_mpdot': '(MPdot {0} {1})',
+    'constructor_mbid': '(Mbid {0} {1})'
+}
+
+# Takes a tree and converts it back to a string rep of an s-expression
+def unparse(node):
+    if node.data == 'int':
+        return node.children[0].value
+    elif node.data == 'names__id__t':
+        return '(Id {})'.format(node.children[0].data)
+    elif node.data == 'constructor_dirpath':
+        return '(DirPath ({}))'.format(' '.join(map(unparse, node.children)))
+    elif node.data == 'constructor_instance':
+        return '(Instance ({}))'.format(' '.join(map(unparse, node.children)))
+    else:
+        return CONSTRUCTOR_NONTERMINALS[node.data].format(*map(unparse, node.children))
 
 class GallinaTermParser:
 
@@ -56,8 +85,23 @@ class GallinaTermParser:
         traverse_postorder(ast, get_quantified_idents)
         ast.quantified_idents = list(ast.quantified_idents)
 
+        def make_ident(value):
+            # Just make everything a nonterminal for compatibility
+            ident_value = Tree(value, [])
+            ident_wrapper = Tree('names__id__t', [ident_value])
+            ident_value.height = 0
+            ident_wrapper.height = 1
+            return ident_wrapper
+
         # Postprocess: compute height, remove some tokens (variable names), make identifiers explicit
         def postprocess(node, is_construct_child):
+            # Recover the constructor name
+            if node.data == 'constructor_construct':
+                unparsed = unparse(node)
+                # TODO: fix not working for non-builtins due to wrong path
+                constructor_name = SERAPI.print_constr(unparsed)[1:]
+                node.children.append(make_ident(constructor_name))
+
             children = []
             node.height = 0
             for c in node.children:
@@ -66,23 +110,17 @@ class GallinaTermParser:
                     children.append(c)
                 # Don't erase fully-qualified names
                 elif node.data == 'names__label__t' or node.data == 'constructor_dirpath':
-                    # Just make everything a nonterminal for compatibility
-                    ident_value = Tree(c.value, [])
-                    ident_wrapper = Tree('names__id__t', [ident_value])
-                    ident_value.height = 0
-                    ident_wrapper.height = 1
                     node.height = 2
-                    children.append(ident_wrapper)
+                    children.append(make_ident(c.value))
                 # Don't erase the node if it is part of a constructor
                 elif is_construct_child:
                     children.append(c)
             node.children = children
 
         def get_is_construct_child(node, is_construct_child):
-            return is_construct_child or node.data == "constructor_construct"
+            return is_construct_child or node.data == 'constructor_construct'
 
         traverse_postorder(ast, postprocess, False, get_is_construct_child)
-        print(ast.pretty())
         return ast
 
 
