@@ -153,8 +153,7 @@ class TermEncoder(nn.Module):
         def get_metadata(node):
             height2nodes[node.height].add(node)
             if self.opts.include_locals and (node.data == 'constructor_var' or node.data == 'constructor_name'):
-            	pdb.set_trace()
-                localnodes.update(node.children)
+            	localnodes.update(node.children)
 
         for ast in term_asts:
             traverse_postorder(ast, get_metadata)

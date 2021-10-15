@@ -17,8 +17,8 @@ def parse_args():
     parser.add_argument('--tac_grammar', type=str, default='tactics.ebnf')
     
     # global options
-    parser.add_argument('--include_defs', action='store_false', help='include the names of definitions and theorems in the model')
-    parser.add_argument('--include_locals', action='store_false', help='include the names of local variables in the model')
+    parser.add_argument('--toggle_defs', action='store_false', help='toggle whether to include the names of definitions and theorems in the model')
+    parser.add_argument('--toggle_locals', action='store_false', help='toggle whether to include the names of local variables in the model')
 
     # experimental setup
     parser.add_argument('--include_synthetic', action='store_true')
@@ -61,6 +61,8 @@ def parse_args():
                                                              (only applicable when no_validation == True)')
 
     opts = parser.parse_args()
+    opts.include_deps = opts.toggle_deps
+    opts.include_locals = opts.toggle_locals
 
     torch.manual_seed(opts.seed)
     torch.backends.cudnn.deterministic = True
