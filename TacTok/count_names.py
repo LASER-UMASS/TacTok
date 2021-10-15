@@ -22,7 +22,7 @@ projs_split = json.load(open('../projs_split.json'))
 idents = {}
 
 get_locals = False
-term_parser = GallinaTermParser(caching=True)
+term_parser = GallinaTermParser(caching=True, include_locals=True, include_defs=True)
 sexp_cache = SexpCache('../sexp_cache', readonly=True)
 
 def parse_goal(g):

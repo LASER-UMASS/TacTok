@@ -9,18 +9,21 @@ import sys
 sys.path.append(os.path.sep.join(__file__.split(os.path.sep)[:-2]))
 from utils import log
 import pdb
-
+import pickle
 
 def parse_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--tac_grammar', type=str, default='tactics.ebnf')
     
+    # global options
+    parser.add_argument('--include_defs', action='store_false', help='include the names of definitions and theorems in the model')
+    parser.add_argument('--include_locals', action='store_false', help='include the names of local variables in the model')
 
     # experimental setup
     parser.add_argument('--include_synthetic', action='store_true')
     parser.add_argument('--exp_id', type=str)
-    parser.add_argument('--datapath', type=str, default='processed/proof_steps')
+    parser.add_argument('--datapath', type=str, default='proof_steps')
     parser.add_argument('--projs_split', type=str, default='../projs_split.json')
     parser.add_argument('--num_epochs', type=int, default=4)
     parser.add_argument('--resume', type=str, help='the model checkpoint to resume')
@@ -35,6 +38,8 @@ def parse_args():
     parser.add_argument('--term_embedding_dim', type=int, default=128)
     parser.add_argument('--num_tactics', type=int, default=15025)
     parser.add_argument('--tac_vocab_file', type=str, default='token_vocab.pickle')
+    parser.add_argument('--def_vocab_file', type=str, default='./names/names-known-200.pickle')
+    parser.add_argument('--local_vocab_file', type=str, default='./names/locals-known-40.pickle')
     parser.add_argument('--cutoff_len', type=int, default=30)
 
     # tactic decoder
@@ -65,6 +70,19 @@ def parse_args():
 
     if opts.include_synthetic:
         opts.datapath = opts.datapath.replace('/human', '/*')
+
+    # The identifier vocabulary
+    vocab = []
+    if opts.include_defs:
+        vocab += list(pickle.load(open(opts.def_vocab_file, 'rb')).keys())
+        vocab += ['<unk-ident>']
+
+	# The local variable vocabulary (same)
+    if opts.include_locals:
+        vocab += list(pickle.load(open(opts.local_vocab_file, 'rb')).keys())
+        vocab += ['<unk-local>']
+
+    opts.vocab = vocab
 
     if opts.exp_id is None:
         opts.exp_id = str(datetime.now())[:-7].replace(' ', '-')

@@ -11,10 +11,6 @@ from collections import defaultdict
 import re
 import pdb
 
-# Options to train different models---move before merging
-include_defs = True # include theorem and definition names
-include_locals = True # include local variable names
-
 def traverse_postorder(node, callback):
     for c in node.children:
         if isinstance(c, Tree):
@@ -24,8 +20,10 @@ def traverse_postorder(node, callback):
 
 class GallinaTermParser:
 
-    def __init__(self, caching=True):
+    def __init__(self, caching=True, include_locals=True, include_defs=True):
         self.caching = caching
+        self.include_locals = include_locals
+        self.include_defs = include_defs
         t = Constr__constr()
         self.grammar = t.to_ebnf(recursive=True) + '''
         %import common.STRING_INNER
@@ -63,7 +61,7 @@ class GallinaTermParser:
                     node.height = max(node.height, c.height + 1)
                     children.append(c)
                 # Don't erase fully-qualified definition & theorem names
-                elif include_defs and (node.data == 'names__label__t' or node.data == 'constructor_dirpath'):
+                elif self.include_defs and (node.data == 'names__label__t' or node.data == 'constructor_dirpath'):
                     # Just make everything a nonterminal for compatibility
                     ident_value = Tree(c.value, [])
                     ident_wrapper = Tree('names__id__t', [ident_value])
@@ -72,7 +70,7 @@ class GallinaTermParser:
                     node.height = 2
                     children.append(ident_wrapper)
                 # Don't erase local variable names
-                elif include_locals and (node.data == 'constructor_var' or node.data == 'constructor_name'):
+                elif self.include_locals and (node.data == 'constructor_var' or node.data == 'constructor_name'):
                     # Just make everything a nonterminal for compatibility
                     var_value = Tree(c.value, [])
                     var_value.height = 0
