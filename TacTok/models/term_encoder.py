@@ -158,9 +158,9 @@ class TermEncoder(nn.Module):
         if data in vocab:
             return vocab.index(data) 
         elif node in localnodes:
-            return vocab.index(['<unk-local>'])
+            return vocab.index('<unk-local>')
         else:
-            return vocab.index(['<unk-ident>'])
+            return vocab.index('<unk-ident>')
 
     def forward(self, term_asts):
         # the height of a node determines when it can be processed
