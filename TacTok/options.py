@@ -61,7 +61,7 @@ def parse_args():
                                                              (only applicable when no_validation == True)')
 
     opts = parser.parse_args()
-    opts.include_deps = opts.toggle_deps
+    opts.include_defs = opts.toggle_defs
     opts.include_locals = opts.toggle_locals
 
     torch.manual_seed(opts.seed)
