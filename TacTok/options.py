@@ -17,13 +17,13 @@ def parse_args():
     parser.add_argument('--tac_grammar', type=str, default='tactics.ebnf')
     
     # global options
-    parser.add_argument('--toggle_defs', action='store_false', help='toggle whether to include the names of definitions and theorems in the model')
-    parser.add_argument('--toggle_locals', action='store_false', help='toggle whether to include the names of local variables in the model')
+    parser.add_argument('--no_defs', action='store_false', dest='include_defs', help='do not include the names of definitions and theorems in the model')
+    parser.add_argument('--no_locals', action='store_false', dest='include_locals', help='do not include the names of local variables in the model')
 
     # experimental setup
     parser.add_argument('--include_synthetic', action='store_true')
     parser.add_argument('--exp_id', type=str)
-    parser.add_argument('--datapath', type=str, default='proof_steps')
+    parser.add_argument('--datapath', type=str, default='processed/proof_steps')
     parser.add_argument('--projs_split', type=str, default='../projs_split.json')
     parser.add_argument('--num_epochs', type=int, default=4)
     parser.add_argument('--resume', type=str, help='the model checkpoint to resume')
@@ -61,8 +61,6 @@ def parse_args():
                                                              (only applicable when no_validation == True)')
 
     opts = parser.parse_args()
-    opts.include_defs = opts.toggle_defs
-    opts.include_locals = opts.toggle_locals
 
     torch.manual_seed(opts.seed)
     torch.backends.cudnn.deterministic = True
