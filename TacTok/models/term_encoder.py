@@ -138,7 +138,6 @@ class TermEncoder(nn.Module):
     def get_vocab_idx(self, node, localnodes):
         data = node.data
         vocab = self.vocab
-        pdb.set_trace()
         if data in vocab:
             return vocab.index(data)
         elif node in localnodes:
@@ -158,8 +157,6 @@ class TermEncoder(nn.Module):
 
         for ast in term_asts:
             traverse_postorder(ast, get_metadata)
-        
-        pdb.set_trace()
 
         memory_cells = {} # node -> memory cell
         hidden_states = {} # node -> hidden state
