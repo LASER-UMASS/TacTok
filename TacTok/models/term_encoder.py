@@ -70,20 +70,14 @@ nonterminals = [
     'names__id__t'
 ]
 
-# The identifier vocabulary (file path should go in options eventually)
-path = './names/names-known-200.pickle'
-ident_vocab = list(pickle.load(open(path, 'rb')).keys())
-ident_vocab += ['<unk>']
-
-vocab = nonterminals + ident_vocab
-
 class InputOutputUpdateGate(nn.Module):
 
-    def __init__(self, hidden_dim, nonlinear):
+    def __init__(self, hidden_dim, vocab, nonlinear):
         super().__init__()
         self.nonlinear = nonlinear
+        self.vocab = vocab
         k = 1. / math.sqrt(hidden_dim)
-        self.W = nn.Parameter(torch.Tensor(hidden_dim, len(vocab) + hidden_dim))
+        self.W = nn.Parameter(torch.Tensor(hidden_dim, len(self.vocab) + hidden_dim))
         nn.init.uniform_(self.W, -k, k)
         self.b = nn.Parameter(torch.Tensor(hidden_dim))
         nn.init.uniform_(self.b, -k, k)
@@ -95,7 +89,7 @@ class InputOutputUpdateGate(nn.Module):
 
 class ForgetGates(nn.Module):
 
-    def __init__(self, hidden_dim, opts):
+    def __init__(self, hidden_dim, vocab, opts):
         super().__init__()
         self.hidden_dim = hidden_dim
         self.opts = opts
@@ -135,27 +129,34 @@ class TermEncoder(nn.Module):
     def __init__(self, opts):
         super().__init__()
         self.opts = opts
-        self.input_gate = InputOutputUpdateGate(opts.term_embedding_dim, nonlinear=torch.sigmoid)
-        self.forget_gates = ForgetGates(opts.term_embedding_dim, opts)
-        self.output_gate = InputOutputUpdateGate(opts.term_embedding_dim, nonlinear=torch.sigmoid)
-        self.update_cell = InputOutputUpdateGate(opts.term_embedding_dim, nonlinear=torch.tanh)
+        self.vocab = opts.vocab + nonterminals
+        self.input_gate = InputOutputUpdateGate(opts.term_embedding_dim, self.vocab, nonlinear=torch.sigmoid)
+        self.forget_gates = ForgetGates(opts.term_embedding_dim, self.vocab, opts)
+        self.output_gate = InputOutputUpdateGate(opts.term_embedding_dim, self.vocab, nonlinear=torch.sigmoid)
+        self.update_cell = InputOutputUpdateGate(opts.term_embedding_dim, self.vocab, nonlinear=torch.tanh)
 
-
-    def get_vocab_idx(self, data):
+    def get_vocab_idx(self, node, localnodes):
+        data = node.data
+        vocab = self.vocab
         if data in vocab:
-            return vocab.index(data) 
+            return vocab.index(data)
+        elif node in localnodes:
+            return vocab.index('<unk-local>')
         else:
-            return vocab.index('<unk>')
+            return vocab.index('<unk-ident>')
 
     def forward(self, term_asts):
         # the height of a node determines when it can be processed
         height2nodes = defaultdict(set)
-
-        def get_height(node):
+        localnodes = set()
+        
+        def get_metadata(node):
             height2nodes[node.height].add(node)
+            if self.opts.include_locals and (node.data == 'constructor_var' or node.data == 'constructor_name'):
+            	localnodes.update(node.children)
 
         for ast in term_asts:
-            traverse_postorder(ast, get_height)
+            traverse_postorder(ast, get_metadata)
 
         memory_cells = {} # node -> memory cell
         hidden_states = {} # node -> hidden state
@@ -167,8 +168,8 @@ class TermEncoder(nn.Module):
             # sum up the hidden states of the children
             h_sum = []
             c_remains = []
-            x = torch.zeros(len(nodes_at_height), len(vocab), device=self.opts.device) \
-                     .scatter_(1, torch.tensor([self.get_vocab_idx(node.data) for node in nodes_at_height], 
+            x = torch.zeros(len(nodes_at_height), len(self.vocab), device=self.opts.device) \
+                     .scatter_(1, torch.tensor([self.get_vocab_idx(node, localnodes) for node in nodes_at_height], 
                                                  device=self.opts.device).unsqueeze(1), 1.0)
 
             h_sum = torch.zeros(len(nodes_at_height), self.opts.term_embedding_dim).to(self.opts.device)
