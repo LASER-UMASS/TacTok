@@ -22,6 +22,8 @@ def tokenize_text(raw_text):
 	words = without_punc.split()
 	return words
 
+os.makedirs('processed/proof_steps/train', exist_ok=True)
+os.makedirs('processed/proof_steps/valid', exist_ok=True)
 
 proof_steps = glob(os.path.join('proof_steps', 'train/*.pickle')) + \
                                glob(os.path.join('proof_steps', 'valid/*.pickle'))
