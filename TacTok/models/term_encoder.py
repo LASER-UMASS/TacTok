@@ -153,9 +153,11 @@ class TermEncoder(nn.Module):
         def get_metadata(node):
             height2nodes[node.height].add(node)
             if self.opts.include_locals and (node.data == 'constructor_var' or node.data == 'constructor_name'):
+                assert len(node.children) > 0
             	localnodes.update(node.children)
 
         for ast in term_asts:
+            print(ast)
             traverse_postorder(ast, get_metadata)
 
         memory_cells = {} # node -> memory cell
