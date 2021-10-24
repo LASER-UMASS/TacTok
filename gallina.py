@@ -6,6 +6,7 @@ from lark.lexer import Token
 from lark.tree import Tree
 from lark.tree import pydot__tree_to_png
 from serapi import SerAPI
+from serutils import unparse
 import logging
 logging.basicConfig(level=logging.DEBUG)
 from collections import defaultdict
@@ -27,31 +28,6 @@ def traverse_postorder(node, callback, parent_info=None, get_parent_info=None):
 
 SERAPI = SerAPI(600)
 
-CONSTRUCTOR_NONTERMINALS = {
-    'constructor_construct': '(Construct ({0} {1}))',
-    'constructor_ulevel':  '(ULevel {})',
-    'names__label__t': '{}',
-    'names__constructor': '({0} {1})',
-    'names__inductive': '({0} {1})',
-    'constructor_mutind': '(Mutind {0} {1} {2})',
-    'constructor_mpfile': '(MPfile {})',
-    'constructor_mpbound': '(MPbound {})',
-    'constructor_mpdot': '(MPdot {0} {1})',
-    'constructor_mbid': '(Mbid {0} {1})'
-}
-
-# Takes a tree and converts it back to a string rep of an s-expression
-def unparse(node):
-    if node.data == 'int':
-        return node.children[0].value
-    elif node.data == 'names__id__t':
-        return '(Id {})'.format(node.children[0].data)
-    elif node.data == 'constructor_dirpath':
-        return '(DirPath ({}))'.format(' '.join(map(unparse, node.children)))
-    elif node.data == 'constructor_instance':
-        return '(Instance ({}))'.format(' '.join(map(unparse, node.children)))
-    else:
-        return CONSTRUCTOR_NONTERMINALS[node.data].format(*map(unparse, node.children))
 
 class GallinaTermParser:
 
@@ -101,7 +77,6 @@ class GallinaTermParser:
                 # TODO: fix not working for non-builtins due to wrong path
                 constructor_name = SERAPI.print_constr(unparsed)[1:]
                 node.children.append(make_ident(constructor_name))
-
             children = []
             node.height = 0
             for c in node.children:
