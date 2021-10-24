@@ -5,8 +5,7 @@ from lark import Lark, Transformer, Visitor, Discard
 from lark.lexer import Token
 from lark.tree import Tree
 from lark.tree import pydot__tree_to_png
-from serapi import SerAPI
-from serutils import unparse
+from serutils import SerAPIWrapper
 import logging
 logging.basicConfig(level=logging.DEBUG)
 from collections import defaultdict
@@ -26,12 +25,10 @@ def traverse_postorder(node, callback, parent_info=None, get_parent_info=None):
     else:
         callback(node)
 
-SERAPI = SerAPI(600)
-
 
 class GallinaTermParser:
 
-    def __init__(self, caching=True):
+    def __init__(self, coq_projects_path="../coq_projects", caching=True):
         self.caching = caching
         t = Constr__constr()
         self.grammar = t.to_ebnf(recursive=True) + '''
@@ -44,6 +41,7 @@ class GallinaTermParser:
         self.parser = Lark(StringIO(self.grammar), start='constr__constr', parser='lalr')
         if caching:
             self.cache = {}
+        self.serapi = SerAPIWrapper(coq_projects_path)
 
 
     def parse_no_cache(self, term_str):
@@ -73,10 +71,9 @@ class GallinaTermParser:
         def postprocess(node, is_construct_child):
             # Recover the constructor name
             if node.data == 'constructor_construct':
-                unparsed = unparse(node)
-                # TODO: fix not working for non-builtins due to wrong path
-                constructor_name = SERAPI.print_constr(unparsed)[1:]
-                node.children.append(make_ident(constructor_name))
+                constructor_name = self.serapi.get_constr_name(node)
+                if constructor_name:
+                    node.children.append(make_ident(constructor_name))
             children = []
             node.height = 0
             for c in node.children:
