@@ -45,7 +45,7 @@ class SerAPIWrapper:
         self.serapi = SerAPI(timeout)
         self.coq_projects_path = os.path.abspath(coq_projects_path)
         self.load_projects()
-        self.added_paths = set()
+        self.added_paths = {'SerTop'}
 
     def load_projects(self):
         coq_projects = Path(self.coq_projects_path)
@@ -78,8 +78,6 @@ class SerAPIWrapper:
         unparsed = unparse(construct_node)
         dir_path = next(construct_node.find_data('constructor_dirpath'))
         path = '.'.join(child.children[0].data for child in reversed(dir_path.children))
-        if path == 'SerTop':
-            return
         if path not in self.added_paths:
             self.added_paths.add(path)
             try:
@@ -87,13 +85,12 @@ class SerAPIWrapper:
             except Exception as e:
                 print('failed to import path {}'.format(path))
                 print('error: {}\n'.format(e))
-                return
         try:
             name = self.serapi.print_constr(unparsed)
         except Exception as e:
             print('print_constr failed for sexpr'.format(unparsed))
             print('error: {}\n'.format(e))
             return
-        if name.startswith('@'):
+        if name and name.startswith('@'):
             name = name[1:]
         return name
