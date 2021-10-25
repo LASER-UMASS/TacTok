@@ -1,8 +1,7 @@
 import os.path
 import re
-from lark import Visitor
+from lark import Token
 from pathlib import Path
-import serapi
 from serapi import SerAPI
 
 CONSTRUCTOR_NONTERMINALS = {
@@ -15,7 +14,7 @@ CONSTRUCTOR_NONTERMINALS = {
     'constructor_mpfile': '(MPfile {})',
     'constructor_mpbound': '(MPbound {})',
     'constructor_mpdot': '(MPdot {} {})',
-    'constructor_mbid': '(Mbid {} {})'
+    'constructor_mbid': '(Mbid (Id {}) {})'
 }
 
 
@@ -24,7 +23,9 @@ def unparse(node):
     takes a tree and converts it back to a string representation of an s-expression, to be fed
     into serapi
     """
-    if node.data == 'int':
+    if isinstance(node, Token):
+        return node.value
+    elif node.data == 'int':
         return node.children[0].value
     elif node.data == 'names__id__t':
         return '(Id {})'.format(node.children[0].data)
@@ -88,7 +89,7 @@ class SerAPIWrapper:
         try:
             name = self.serapi.print_constr(unparsed)
         except Exception as e:
-            print('print_constr failed for sexpr'.format(unparsed))
+            print('print_constr failed for sexpr {}'.format(unparsed))
             print('error: {}\n'.format(e))
             return
         if name and name.startswith('@'):
