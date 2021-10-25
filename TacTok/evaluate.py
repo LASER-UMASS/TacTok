@@ -15,6 +15,7 @@ from progressbar import ProgressBar
 from agent import Agent
 from models.prover import Prover
 import pdb
+import pickle
 
 
 if __name__ == '__main__':
@@ -49,7 +50,19 @@ if __name__ == '__main__':
     parser.add_argument('--tac_vocab_file', type=str, default='token_vocab.pickle')
     parser.add_argument('--cutoff_len', type=int, default=30)
 
+    # global options
+    parser.add_argument('--no_defs', action='store_false', dest='include_defs', help='do not include the names of definitions and theorems in the model')
+    parser.add_argument('--no_locals', action='store_false', dest='include_locals', help='do not include the names of local variables in the model')
     parser.add_argument('--debug', action='store_true')
+    
+    # term encoder
+    parser.add_argument('--def_vocab_file', type=str, default='./names/names-known-200.pickle')
+    parser.add_argument('--local_vocab_file', type=str, default='./names/locals-known-40.pickle')
+
+    parser.add_argument('--names-file', type=str, default='./names/names.pickle')
+    parser.add_argument('--bpe-merges', type=int, default=1024)
+    parser.add_argument('--ident-vec-size', type=int, default=32)
+    parser.add_argument('--max-ident-chunks', type=int, default=8)
 
     opts = parser.parse_args()
     log(opts)
@@ -63,6 +76,18 @@ if __name__ == '__main__':
     np.random.seed(opts.seed)
     random.seed(opts.seed)
 
+    # The identifier vocabulary
+    vocab = []
+    if opts.include_defs:
+        vocab += list(pickle.load(open(opts.def_vocab_file, 'rb')).keys())
+        vocab += ['<unk-ident>']
+
+	# The local variable vocabulary (same)
+    if opts.include_locals:
+        vocab += list(pickle.load(open(opts.local_vocab_file, 'rb')).keys())
+        vocab += ['<unk-local>']
+
+    opts.vocab = vocab
     projs_test = ["weak-up-to", "buchberger", "jordan-curve-theorem", "dblib", "disel", "zchinese", "zfc", "dep-map", "chinese", "UnifySL", "hoare-tut", "huffman", "PolTac", "angles", "coq-procrastination", "coq-library-undecidability", "tree-automata", "coquelicot", "fermat4", "demos", "coqoban", "goedel", "verdi-raft", "verdi", "zorns-lemma", "coqrel", "fundamental-arithmetics"]
 
     if 'ours' in opts.method:
