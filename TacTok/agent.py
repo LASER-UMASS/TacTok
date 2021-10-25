@@ -182,7 +182,7 @@ class Agent:
         assert 'hammer_' not in self.opts.method
         hammer_timeout = self.opts.hammer_timeout if 'ours' in self.opts.method else self.opts.timeout
 
-        with FileEnv(filename, self.opts.max_num_tactics, self.opts.timeout, with_hammer=with_hammer, hammer_timeout=hammer_timeout) as file_env:
+        with FileEnv(filename, self.opts.max_num_tactics, self.opts.timeout, debug=self.opts.debug, with_hammer=with_hammer, hammer_timeout=hammer_timeout) as file_env:
             results = []
             for proof_env in file_env:  # start a proof
                 if proof_name is not None and proof_env.proof['name'] != proof_name:

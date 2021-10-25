@@ -33,6 +33,7 @@ def parse_args():
     parser.add_argument('--smoke', action='store_true')
     parser.add_argument('--seed', type=int, default=0)
     parser.add_argument('--filter', type=str)
+    parser.add_argument('--debug', action='store_true')
 
     # term encoder
     parser.add_argument('--term_embedding_dim', type=int, default=128)

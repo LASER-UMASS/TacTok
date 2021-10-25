@@ -117,7 +117,7 @@ class FileEnv:
     the agent iterate through them and interact with each theorem sequentially
     '''
 
-    def __init__(self, filename, max_num_tactics, timeout, with_hammer=None, hammer_timeout=None):
+    def __init__(self, filename, max_num_tactics, timeout, debug=False, with_hammer=None, hammer_timeout=None):
         '''
         filename - the json file in CoqGym
         max_num_tactics - the maxium number of interactions for proving a theorem
@@ -130,11 +130,12 @@ class FileEnv:
         self.timeout = timeout
         self.with_hammer = with_hammer
         self.hammer_timeout = hammer_timeout
+        self.debug = debug
         self.serapi = self.initialize_serapi()
 
 
     def initialize_serapi(self):
-        serapi = SerAPI(timeout=1200)
+        serapi = SerAPI(timeout=1200, debug=self.debug)
         if self.with_hammer is not None:
             atp_limit = 29 * self.hammer_timeout // 60
             reconstr_limit = 28 * self.hammer_timeout // 60
