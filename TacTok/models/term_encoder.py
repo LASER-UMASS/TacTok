@@ -144,6 +144,11 @@ class TermEncoder(nn.Module):
         occurances.update(
           pickle.load(open(opts.locals_file, 'rb')))
         self.name_tokenizer = BPETokenizer(occurances, opts.bpe_merges)
+        if opts.dump_subwords:
+            with open(opts.dump_subwords, 'w') as f:
+                for subword in self.name_tokenizer.vocab:
+                    print(subword, file=f)
+
         self.name_encoder = nn.RNN(self.name_tokenizer.vocab_size + 1, 
                                    opts.ident_vec_size, batch_first=True)
 
