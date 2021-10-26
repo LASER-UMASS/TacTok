@@ -140,7 +140,10 @@ class TermEncoder(nn.Module):
                                                  nonlinear=torch.sigmoid)
         self.update_cell = InputOutputUpdateGate(opts.term_embedding_dim, self.vocab, opts,
                                                  nonlinear=torch.tanh)
-        self.name_tokenizer = BPETokenizer(pickle.load(open(opts.names_file, 'rb')), opts.bpe_merges)
+        occurances = pickle.load(open(opts.globals_file, 'rb'))
+        occurances.update(
+          pickle.load(open(opts.locals_file, 'rb')))
+        self.name_tokenizer = BPETokenizer(occurances, opts.bpe_merges)
         self.name_encoder = nn.RNN(self.name_tokenizer.vocab_size + 1, 
                                    opts.ident_vec_size, batch_first=True)
 
