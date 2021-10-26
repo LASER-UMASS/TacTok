@@ -2,3 +2,16 @@
 *.pyc
 *.glob
 *.aux
+*.meta
+*.o
+*.cmi
+*.cmx
+*.mli
+*.ml
+Makefile.coq.conf
+Makefile.coq
+Makefile.conf
+.merlin
+.coqdeps.d
+coq/*
+TacTok/coqhammer/*
