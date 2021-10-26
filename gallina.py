@@ -20,10 +20,11 @@ def traverse_postorder(node, callback):
 
 class GallinaTermParser:
 
-    def __init__(self, caching=True, include_locals=True, include_defs=True):
+    def __init__(self, caching=True, include_locals=True, include_defs=True, include_paths=True):
         self.caching = caching
         self.include_locals = include_locals
         self.include_defs = include_defs
+        self.include_paths = include_paths
         t = Constr__constr()
         self.grammar = t.to_ebnf(recursive=True) + '''
         %import common.STRING_INNER
@@ -52,7 +53,7 @@ class GallinaTermParser:
         traverse_postorder(ast, get_quantified_idents)
         ast.quantified_idents = list(ast.quantified_idents)
 
-        # Postprocess: compute height, remove some tokens (variable names), make identifiers explicit
+        # Postprocess: compute height, remove some tokens, make identifiers explicit
         def postprocess(node):
             children = []
             node.height = 0
@@ -60,8 +61,8 @@ class GallinaTermParser:
                 if isinstance(c, Tree):
                     node.height = max(node.height, c.height + 1)
                     children.append(c)
-                # Don't erase fully-qualified definition & theorem names
-                elif self.include_defs and (node.data == 'names__label__t' or node.data == 'constructor_dirpath'):
+                # Don't erase fully-qualified definition & theorem names (TODO before merging, clean and move to other functions)
+                elif (self.include_defs and node.data == 'names__label__t') or (self.include_paths and node.data == 'constructor_dirpath'):
                     # Just make everything a nonterminal for compatibility
                     ident_value = Tree(c.value, [])
                     ident_wrapper = Tree('names__id__t', [ident_value])
