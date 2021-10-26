@@ -109,6 +109,7 @@ if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser(description='Extract the proof steps from CoqGym for trainig ASTactic via supervised learning')
     arg_parser.add_argument('--no_defs', action='store_false', dest='include_defs', help='do not include the names of definitions and theorems in the model')
     arg_parser.add_argument('--no_locals', action='store_false', dest='include_locals', help='do not include the names of local variables in the model')
+    arg_parser.add_argument('--no_paths', action='store_false', dest='include_paths', help='do not include the paths of definitions and theorems in the model')
     arg_parser.add_argument('--data_root', type=str, default='../data',
                                 help='The folder for CoqGym')
     arg_parser.add_argument('--output', type=str, default='./proof_steps/',
@@ -117,7 +118,7 @@ if __name__ == '__main__':
     args = arg_parser.parse_args()
     print(args)
     
-    term_parser = GallinaTermParser(caching=True, include_locals=args.include_locals, include_defs=args.include_defs)
+    term_parser = GallinaTermParser(caching=True, include_locals=args.include_locals, include_defs=args.include_defs, include_paths=args.include_paths)
 
     iter_proofs(args.data_root, process_proof, include_synthetic=False, show_progress=True)
 
