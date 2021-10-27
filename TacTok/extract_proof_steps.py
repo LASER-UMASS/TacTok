@@ -14,7 +14,7 @@ from hashlib import md5
 from agent import filter_env
 import pdb
 
-syn_conf= SyntaxConfig(include_locals=True, include_defs=True, include_paths=True)
+syn_conf = SyntaxConfig(include_locals=True, include_defs=True, include_paths=True)
 term_parser = GallinaTermParser(syn_conf, caching=True)
 sexp_cache = SexpCache('../sexp_cache', readonly=True)
 

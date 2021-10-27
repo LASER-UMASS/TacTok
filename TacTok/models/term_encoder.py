@@ -7,6 +7,7 @@ from time import time
 from itertools import chain
 from lark.tree import Tree
 import os
+from syntax import SyntaxConfig
 from gallina import traverse_postorder
 import pdb
 import pickle
@@ -129,19 +130,22 @@ class TermEncoder(nn.Module):
     def __init__(self, opts):
         super().__init__()
         self.opts = opts
+        self.syn_conf = SyntaxConfig(opts.include_locals, opts.include_defs, opts.include_paths)
         self.vocab = opts.vocab + nonterminals
         self.input_gate = InputOutputUpdateGate(opts.term_embedding_dim, self.vocab, nonlinear=torch.sigmoid)
         self.forget_gates = ForgetGates(opts.term_embedding_dim, self.vocab, opts)
         self.output_gate = InputOutputUpdateGate(opts.term_embedding_dim, self.vocab, nonlinear=torch.sigmoid)
         self.update_cell = InputOutputUpdateGate(opts.term_embedding_dim, self.vocab, nonlinear=torch.tanh)
 
-    def get_vocab_idx(self, node, localnodes):
+    def get_vocab_idx(self, node, localnodes, paths):
         data = node.data
         vocab = self.vocab
         if data in vocab:
             return vocab.index(data)
         elif node in localnodes:
             return vocab.index('<unk-local>')
+        elif node in paths:
+            return vocab.index('<unk-path>')
         else:
             return vocab.index('<unk-ident>')
 
@@ -149,15 +153,19 @@ class TermEncoder(nn.Module):
         # the height of a node determines when it can be processed
         height2nodes = defaultdict(set)
         localnodes = set()
+        paths = set()
         
         def get_metadata(node):
             height2nodes[node.height].add(node)
-            if self.opts.include_locals and (node.data == 'constructor_var' or node.data == 'constructor_name'):
+            if self.syn_conf.include_paths and self.syn_conf.is_path(node):
+                for c in node.children:
+                    assert len(c.children) > 0
+                    paths.update(c.children)
+            if self.syn_conf.include_locals and self.syn_conf.is_local(node):
                 assert len(node.children) > 0
             	localnodes.update(node.children)
 
         for ast in term_asts:
-            print(ast)
             traverse_postorder(ast, get_metadata)
 
         memory_cells = {} # node -> memory cell
@@ -171,7 +179,7 @@ class TermEncoder(nn.Module):
             h_sum = []
             c_remains = []
             x = torch.zeros(len(nodes_at_height), len(self.vocab), device=self.opts.device) \
-                     .scatter_(1, torch.tensor([self.get_vocab_idx(node, localnodes) for node in nodes_at_height], 
+                     .scatter_(1, torch.tensor([self.get_vocab_idx(node, localnodes, paths) for node in nodes_at_height], 
                                                  device=self.opts.device).unsqueeze(1), 1.0)
 
             h_sum = torch.zeros(len(nodes_at_height), self.opts.term_embedding_dim).to(self.opts.device)
