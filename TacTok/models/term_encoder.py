@@ -234,6 +234,8 @@ class TermEncoder(nn.Module):
         for ast in term_asts:
             traverse_postorder(ast, get_metadata)
 
+        pdb.set_trace()
+
         memory_cells = {} # node -> memory cell
         hidden_states = {} # node -> hidden state
         #return torch.zeros(len(term_asts), self.opts.term_embedding_dim).to(self.opts.device)
