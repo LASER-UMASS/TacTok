@@ -47,7 +47,7 @@ class BPETokenizer:
                                for x in l]))
         self.vocab_size = len(base_vocab) + merges
 
-        vocab = list(base_vocab)
+        vocab = list(base_vocab) + ["<unk>"]
         word_breakdowns = [(list(word), count) for word, count in word_counts.items()]
         for i in range(merges):
             pair_counts = Counter()
