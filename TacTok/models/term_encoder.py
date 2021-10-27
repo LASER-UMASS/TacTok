@@ -223,11 +223,11 @@ class TermEncoder(nn.Module):
 
         def get_metadata(node):
             height2nodes[node.height].add(node)
-            if self.syn_conf.include_paths and self.syn_conf.is_path(node):
+            if self.syn_conf.include_paths and SyntaxConfig.is_path(node):
                 for c in node.children:
                     assert len(c.children) > 0
                     paths.update(c.children)
-            if self.syn_conf.include_locals and self.syn_conf.is_local(node):
+            if self.syn_conf.include_locals and SyntaxConfig.is_local(node):
                 assert len(node.children) > 0
                 localnodes.update(node.children)
 

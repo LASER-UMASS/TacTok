@@ -52,7 +52,7 @@ def count(filename, proof_data):
 
     # count occurrences within a goal
     def count_in_goal(node):
-        if syn_conf.is_path(node):
+        if SyntaxConfig.is_path(node):
             # paths
             if syn_conf.include_paths:
                 for c in node.children:
@@ -60,12 +60,12 @@ def count(filename, proof_data):
                     incr_ident(ident, paths)
                     incr_ident(ident, merged)
             node.children = [] # don't treat these like global definitions
-        elif syn_conf.include_defs and syn_conf.is_ident(node):
+        elif syn_conf.include_defs and SyntaxConfig.is_ident(node):
             # global definitions and theorems
             ident = node.children[0].data
             incr_ident(ident, defs)
             incr_ident(ident, merged)
-        elif syn_conf.include_locals and syn_conf.is_local(node):
+        elif syn_conf.include_locals and SyntaxConfig.is_local(node):
             # local variables
             ident = node.children[0].data
             incr_ident(ident, local_defs)
