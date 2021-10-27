@@ -117,6 +117,7 @@ if __name__ == '__main__':
             files.extend(glob(os.path.join(opts.datapath, '%s/**/*.json' % proj), recursive=True))
 
     if opts.file_idx is not None:
+        assert opts.file_idx < len(files), f"Error: Passed file index {opts.file_idx} but there are only {len(files)} files"
         files = [files[opts.file_idx]]
 
     if opts.filter:
