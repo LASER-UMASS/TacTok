@@ -13,8 +13,8 @@ from hashlib import md5
 from agent import filter_env
 import pdb
 
-
-term_parser = GallinaTermParser(caching=True, include_defs=True, include_locals=True)
+syn_conf= SyntaxConfig(include_locals=True, include_defs=True, include_paths=True)
+term_parser = GallinaTermParser(caching=True, syn_conf)
 sexp_cache = SexpCache('../sexp_cache', readonly=True)
 
 def parse_goal(g):
@@ -118,7 +118,8 @@ if __name__ == '__main__':
     args = arg_parser.parse_args()
     print(args)
     
-    term_parser = GallinaTermParser(caching=True, include_locals=args.include_locals, include_defs=args.include_defs, include_paths=args.include_paths)
+    syn_conf= SyntaxConfig(args.include_locals, args.include_defs, args.include_paths)
+    term_parser = GallinaTermParser(caching=True, syn_conf)
 
     iter_proofs(args.data_root, process_proof, include_synthetic=False, show_progress=True)
 
