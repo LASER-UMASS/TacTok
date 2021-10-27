@@ -7,6 +7,7 @@ from time import time
 from itertools import chain
 from lark.tree import Tree
 import os
+from syntax import SyntaxConfig
 from gallina import traverse_postorder
 import pdb
 import pickle
@@ -78,8 +79,8 @@ class InputOutputUpdateGate(nn.Module):
         self.nonlinear = nonlinear
         self.vocab = vocab
         k = 1. / math.sqrt(hidden_dim)
-        self.W = nn.Parameter(torch.Tensor(hidden_dim, 
-                                           len(vocab) + opts.ident_vec_size 
+        self.W = nn.Parameter(torch.Tensor(hidden_dim,
+                                           len(vocab) + opts.ident_vec_size
                                            + hidden_dim))
         nn.init.uniform_(self.W, -k, k)
         self.b = nn.Parameter(torch.Tensor(hidden_dim))
@@ -132,6 +133,7 @@ class TermEncoder(nn.Module):
     def __init__(self, opts):
         super().__init__()
         self.opts = opts
+        self.syn_conf = SyntaxConfig(opts.include_locals, opts.include_defs, opts.include_paths)
         self.vocab = opts.vocab + nonterminals
         self.input_gate = InputOutputUpdateGate(opts.term_embedding_dim, self.vocab, opts,
                                                 nonlinear=torch.sigmoid)
@@ -158,16 +160,18 @@ class TermEncoder(nn.Module):
                 for subword in self.name_tokenizer.vocab:
                     print(subword, file=f)
 
-        self.name_encoder = nn.RNN(self.name_tokenizer.vocab_size + 1, 
+        self.name_encoder = nn.RNN(self.name_tokenizer.vocab_size + 1,
                                    opts.ident_vec_size, batch_first=True)
 
-    def get_vocab_idx(self, node, localnodes):
+    def get_vocab_idx(self, node, localnodes, paths):
         data = node.data
         vocab = self.vocab
         if data in vocab:
             return vocab.index(data)
         elif node in localnodes:
             return vocab.index('<unk-local>')
+        elif node in paths:
+            return vocab.index('<unk-path>')
         else:
             return vocab.index('<unk-ident>')
 
@@ -188,7 +192,7 @@ class TermEncoder(nn.Module):
                           self.opts.max_ident_chunks,
                           0,
                           # Add 1 here to account for the padding value of zero
-                          [tok + 1 for tok in 
+                          [tok + 1 for tok in
                            self.name_tokenizer.tokenize_to_idx(
                              node.children[0].data.lower() if self.opts.case_insensitive_idents
                              else node.children[0].data)]
@@ -205,10 +209,10 @@ class TermEncoder(nn.Module):
           torch.zeros(len(nodes), self.opts.max_ident_chunks,
                       self.name_tokenizer.vocab_size + 1,
                       device=self.opts.device)\
-               .scatter_(2, 
+               .scatter_(2,
                          node_identifier_chunks.unsqueeze(2),
                          1.0)
-        
+
         output, final_hidden = self.name_encoder(one_hot_chunks,
                                                  encoder_initial_hidden)
         return final_hidden[0]
@@ -217,10 +221,15 @@ class TermEncoder(nn.Module):
         # the height of a node determines when it can be processed
         height2nodes = defaultdict(set)
         localnodes = set()
-        
+        paths = set()
+
         def get_metadata(node):
             height2nodes[node.height].add(node)
-            if self.opts.include_locals and (node.data == 'constructor_var' or node.data == 'constructor_name'):
+            if self.syn_conf.include_paths and self.syn_conf.is_path(node):
+                for c in node.children:
+                    assert len(c.children) > 0
+                    paths.update(c.children)
+            if self.syn_conf.include_locals and self.syn_conf.is_local(node):
                 assert len(node.children) > 0
                 localnodes.update(node.children)
 
@@ -237,14 +246,14 @@ class TermEncoder(nn.Module):
             # sum up the hidden states of the children
             h_sum = []
             c_remains = []
-            x0 = torch.zeros(len(nodes_at_height), len(self.vocab), 
+            x0 = torch.zeros(len(nodes_at_height), len(self.vocab),
                              device=self.opts.device) \
-                      .scatter_(1, torch.tensor([self.get_vocab_idx(node, localnodes) for node in nodes_at_height], 
+                      .scatter_(1, torch.tensor([self.get_vocab_idx(node, localnodes, paths) for node in nodes_at_height],
                                                 device=self.opts.device).unsqueeze(1), 1.0)
 
             x1 = self.encode_identifiers(nodes_at_height)
             x = torch.cat((x0, x1), dim=1)
-            
+
 
             h_sum = torch.zeros(len(nodes_at_height), self.opts.term_embedding_dim).to(self.opts.device)
             h_children = []
@@ -257,13 +266,13 @@ class TermEncoder(nn.Module):
                     h_sum[j] += h
                     h_children[-1].append(h)
                     c_children[-1].append(memory_cells[c])
-            c_remains = self.forget_gates(x, h_children, c_children) 
+            c_remains = self.forget_gates(x, h_children, c_children)
 
             # gates
             xh = torch.cat([x, h_sum], dim=1)
             i_gate = self.input_gate(xh)
             o_gate = self.output_gate(xh)
-            u = self.update_cell(xh) 
+            u = self.update_cell(xh)
             cells = i_gate * u + c_remains
             hiddens = o_gate * torch.tanh(cells)
 
@@ -271,5 +280,5 @@ class TermEncoder(nn.Module):
             for i, node in enumerate(nodes_at_height):
                 memory_cells[node] = cells[i]
                 hidden_states[node] = hiddens[i]
-       
+
         return torch.stack([hidden_states[ast] for ast in term_asts])

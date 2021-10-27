@@ -58,10 +58,14 @@ def parse_args():
         vocab += list(pickle.load(open(opts.def_vocab_file, 'rb')).keys())
         vocab += ['<unk-ident>']
 
-	# The local variable vocabulary (same)
+    # The local variable vocabulary
     if opts.include_locals:
         vocab += list(pickle.load(open(opts.local_vocab_file, 'rb')).keys())
         vocab += ['<unk-local>']
+
+    if opts.include_paths:
+        vocab += list(pickle.load(open(opts.path_vocab_file, 'rb')).keys())
+        vocab += ['<unk-path>']
 
     opts.vocab = vocab
 
