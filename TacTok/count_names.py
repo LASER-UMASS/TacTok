@@ -26,6 +26,7 @@ include_paths = True
 term_parser = GallinaTermParser(caching=True, include_locals=True, include_defs=True)
 sexp_cache = SexpCache('../sexp_cache', readonly=True)
 
+# Preorder traversal makes it easier
 def traverse_preorder(node, callback):
     callback(node)
     for c in node.children:
@@ -104,14 +105,6 @@ def dump_idents(dirname):
         dump(dirname, 'paths.pickle', paths)
 
     dump(dirname, 'merged.pickle', merged)
-
-    print(defs)
-    print("\n")
-    print(local_defs)
-    print("\n")
-    print(paths)
-    print("\n")
-    print(merged)
 
     print('output saved to ', dirname)
 
