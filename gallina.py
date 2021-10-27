@@ -8,6 +8,7 @@ from lark.tree import pydot__tree_to_png
 import logging
 logging.basicConfig(level=logging.DEBUG)
 from collections import defaultdict
+from syntax import SyntaxConfig
 import re
 import pdb
 
@@ -20,7 +21,7 @@ def traverse_postorder(node, callback):
 
 class GallinaTermParser:
 
-    def __init__(self, caching=True, syn_conf):
+    def __init__(self, syntax_config, caching=True):
         self.caching = caching
         self.syntax_config = syntax_config
         t = Constr__constr()
@@ -37,12 +38,13 @@ class GallinaTermParser:
 
 
     def parse_no_cache(self, term_str):
+        syn_conf = self.syntax_config
         ast = self.parser.parse(term_str)
 
         ast.quantified_idents = set()
 
         def get_quantified_idents(node):
-            if node.data == 'constructor_prod' and node.children != [] and node.children[0].data == 'constructor_name':
+            if node.data == 'constructor_prod' and node.children != [] and syn_conf.is_name(node.children[0]):
                 ident = node.children[0].children[0].value
                 if ident.startswith('"') and ident.endswith('"'):
                     ident = ident[1:-1]
@@ -50,8 +52,6 @@ class GallinaTermParser:
 
         traverse_postorder(ast, get_quantified_idents)
         ast.quantified_idents = list(ast.quantified_idents)
-        
-        syn_conf = self.syntax_config
 
         # Postprocess: compute height, remove some tokens, make identifiers explicit
         # Make everything nonterminal for compatibility
@@ -72,8 +72,7 @@ class GallinaTermParser:
                     node.height = 2
                     children.append(ident_wrapper)
                 # Don't erase local variable names
-                elif (syn_conf.include_locals and 
-                (syn_conf.is_var(node) or syn_conf.is_name(node))):
+                elif (syn_conf.include_locals and syn_conf.is_local(node)):
                     var_value = Tree(c.value, [])
                     var_value.height = 0
                     node.height = 1

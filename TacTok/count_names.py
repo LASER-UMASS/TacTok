@@ -4,6 +4,7 @@ import pickle
 import sys
 sys.setrecursionlimit(100000)
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../')))
+from syntax import SyntaxConfig
 from gallina import GallinaTermParser
 from lark.exceptions import UnexpectedCharacters, ParseError
 import argparse
@@ -21,7 +22,7 @@ paths = {}
 merged = {}
 
 syn_conf = SyntaxConfig(include_locals=True, include_defs=True, include_paths=True)
-term_parser = GallinaTermParser(caching=True, syn_conf)
+term_parser = GallinaTermParser(syn_conf, caching=True)
 sexp_cache = SexpCache('../sexp_cache', readonly=True)
 
 # Preorder traversal makes it easier
@@ -31,7 +32,7 @@ def traverse_preorder(node, callback):
         if isinstance(c, Tree):
             traverse_preorder(c, callback)
 
-def parse_goal(term_parser, g):
+def parse_goal(g):
     return term_parser.parse(sexp_cache[g['sexp']])
 
 def incr_ident(ident, idents):
@@ -64,7 +65,7 @@ def count(filename, proof_data):
             ident = node.children[0].data
             incr_ident(ident, defs)
             incr_ident(ident, merged)
-        elif syn_conf.include_locals and (syn_conf.is_var(node) or syn_conf.is_name(node)):
+        elif syn_conf.include_locals and syn_conf.is_local(node):
             # local variables
             ident = node.children[0].data
             incr_ident(ident, local_defs)
@@ -81,24 +82,16 @@ def dump_idents(dirname):
     if not os.path.exists(dirname):
         os.makedirs(dirname)
 
-    if include_defs:
+    if syn_conf.include_defs:
         dump(dirname, 'names.pickle', defs)
 
-    if include_locals:
+    if syn_conf.include_locals:
         dump(dirname, 'locals.pickle', local_defs)
 
-    if include_paths:
+    if syn_conf.include_paths:
         dump(dirname, 'paths.pickle', paths)
 
     dump(dirname, 'merged.pickle', merged)
-
-    print(paths)
-    print("-------\n")
-    print(local_defs)
-    print("-------\n")
-    print(defs)
-    print("-------\n")
-    print(merged)
 
     print('output saved to ', dirname)
 
@@ -115,7 +108,7 @@ if __name__ == '__main__':
     print(args)
     
     syntax_config = SyntaxConfig(args.include_locals, args.include_defs, args.include_paths)
-    term_parser = GallinaTermParser(caching=True, args.include_locals, args.include_defs)
+    term_parser = GallinaTermParser(syn_conf, caching=True)
 
     iter_proofs(args.data_root, count, include_synthetic=False, show_progress=True)
 

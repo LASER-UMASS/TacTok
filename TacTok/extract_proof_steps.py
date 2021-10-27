@@ -5,6 +5,7 @@ from tac_grammar import CFG, TreeBuilder, NonterminalNode, TerminalNode
 import sys
 sys.setrecursionlimit(100000)
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../')))
+from syntax import SyntaxConfig
 from gallina import GallinaTermParser
 from lark.exceptions import UnexpectedCharacters, ParseError
 from utils import iter_proofs, SexpCache
@@ -14,7 +15,7 @@ from agent import filter_env
 import pdb
 
 syn_conf= SyntaxConfig(include_locals=True, include_defs=True, include_paths=True)
-term_parser = GallinaTermParser(caching=True, syn_conf)
+term_parser = GallinaTermParser(syn_conf, caching=True)
 sexp_cache = SexpCache('../sexp_cache', readonly=True)
 
 def parse_goal(g):
@@ -118,8 +119,8 @@ if __name__ == '__main__':
     args = arg_parser.parse_args()
     print(args)
     
-    syn_conf= SyntaxConfig(args.include_locals, args.include_defs, args.include_paths)
-    term_parser = GallinaTermParser(caching=True, syn_conf)
+    syn_conf = SyntaxConfig(args.include_locals, args.include_defs, args.include_paths)
+    term_parser = GallinaTermParser(syn_conf, caching=True)
 
     iter_proofs(args.data_root, process_proof, include_synthetic=False, show_progress=True)
 
