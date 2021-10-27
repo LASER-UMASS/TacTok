@@ -20,10 +20,8 @@ local_defs = {}
 paths = {}
 merged = {}
 
-include_locals = True
-include_defs = True
-include_paths = True
-term_parser = GallinaTermParser(caching=True, include_locals=True, include_defs=True)
+syn_conf = SyntaxConfig(include_locals=True, include_defs=True, include_paths=True)
+term_parser = GallinaTermParser(caching=True, syn_conf)
 sexp_cache = SexpCache('../sexp_cache', readonly=True)
 
 # Preorder traversal makes it easier
@@ -33,7 +31,7 @@ def traverse_preorder(node, callback):
         if isinstance(c, Tree):
             traverse_preorder(c, callback)
 
-def parse_goal(g):
+def parse_goal(term_parser, g):
     return term_parser.parse(sexp_cache[g['sexp']])
 
 def incr_ident(ident, idents):
@@ -41,18 +39,6 @@ def incr_ident(ident, idents):
         idents[ident] = 1
     else:
         idents[ident] += 1
-
-# The node is a global definition or theorem, and we're getting those
-def is_def(node):
-    return include_defs and (node.data == 'names__id__t')
-
-# The node is a local variable, and we're getting those
-def is_local(node):
-    return include_locals and (node.data == 'constructor_var' or node.data == 'constructor_name')
-
-# The node is a path, whether or not we're getting those
-def maybe_path(node):
-    return (node.data == 'constructor_dirpath')
 
 def count(filename, proof_data):
     proj = filename.split(os.path.sep)[2]
@@ -65,20 +51,20 @@ def count(filename, proof_data):
 
     # count occurrences within a goal
     def count_in_goal(node):
-        if maybe_path(node):
+        if syn_conf.is_path(node):
             # paths
-            if include_paths:
+            if syn_conf.include_paths:
                 for c in node.children:
                     ident = c.children[0].data
                     incr_ident(ident, paths)
                     incr_ident(ident, merged)
-            node.children = [] # don't treat these like idents
-        elif is_def(node):
+            node.children = [] # don't treat these like global definitions
+        elif syn_conf.include_defs and syn_conf.is_ident(node):
             # global definitions and theorems
             ident = node.children[0].data
             incr_ident(ident, defs)
             incr_ident(ident, merged)
-        elif is_local(node):
+        elif syn_conf.include_locals and (syn_conf.is_var(node) or syn_conf.is_name(node)):
             # local variables
             ident = node.children[0].data
             incr_ident(ident, local_defs)
@@ -106,6 +92,14 @@ def dump_idents(dirname):
 
     dump(dirname, 'merged.pickle', merged)
 
+    print(paths)
+    print("-------\n")
+    print(local_defs)
+    print("-------\n")
+    print(defs)
+    print("-------\n")
+    print(merged)
+
     print('output saved to ', dirname)
 
 if __name__ == '__main__':
@@ -120,9 +114,8 @@ if __name__ == '__main__':
     args = arg_parser.parse_args()
     print(args)
     
-    include_locals = args.include_locals
-    include_defs = args.include_defs
-    include_paths = args.include_paths
+    syntax_config = SyntaxConfig(args.include_locals, args.include_defs, args.include_paths)
+    term_parser = GallinaTermParser(caching=True, args.include_locals, args.include_defs)
 
     iter_proofs(args.data_root, count, include_synthetic=False, show_progress=True)
 

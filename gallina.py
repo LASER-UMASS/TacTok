@@ -20,11 +20,9 @@ def traverse_postorder(node, callback):
 
 class GallinaTermParser:
 
-    def __init__(self, caching=True, include_locals=True, include_defs=True, include_paths=True):
+    def __init__(self, caching=True, syn_conf):
         self.caching = caching
-        self.include_locals = include_locals
-        self.include_defs = include_defs
-        self.include_paths = include_paths
+        self.syntax_config = syntax_config
         t = Constr__constr()
         self.grammar = t.to_ebnf(recursive=True) + '''
         %import common.STRING_INNER
@@ -52,8 +50,11 @@ class GallinaTermParser:
 
         traverse_postorder(ast, get_quantified_idents)
         ast.quantified_idents = list(ast.quantified_idents)
+        
+        syn_conf = self.syntax_config
 
         # Postprocess: compute height, remove some tokens, make identifiers explicit
+        # Make everything nonterminal for compatibility
         def postprocess(node):
             children = []
             node.height = 0
@@ -61,18 +62,18 @@ class GallinaTermParser:
                 if isinstance(c, Tree):
                     node.height = max(node.height, c.height + 1)
                     children.append(c)
-                # Don't erase fully-qualified definition & theorem names (TODO before merging, clean and move to other functions)
-                elif (self.include_defs and node.data == 'names__label__t') or (self.include_paths and node.data == 'constructor_dirpath'):
-                    # Just make everything a nonterminal for compatibility
+                # Don't erase fully-qualified definition & theorem names
+                elif ((syn_conf.include_defs and syn_conf.is_label(node)) or
+                (syn_conf.include_paths and syn_conf.is_path(node))):
                     ident_value = Tree(c.value, [])
-                    ident_wrapper = Tree('names__id__t', [ident_value])
+                    ident_wrapper = syn_conf.singleton_ident(ident_value)
                     ident_value.height = 0
                     ident_wrapper.height = 1
                     node.height = 2
                     children.append(ident_wrapper)
                 # Don't erase local variable names
-                elif self.include_locals and (node.data == 'constructor_var' or node.data == 'constructor_name'):
-                    # Just make everything a nonterminal for compatibility
+                elif (syn_conf.include_locals and 
+                (syn_conf.is_var(node) or syn_conf.is_name(node))):
                     var_value = Tree(c.value, [])
                     var_value.height = 0
                     node.height = 1
