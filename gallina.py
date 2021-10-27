@@ -44,7 +44,7 @@ class GallinaTermParser:
         ast.quantified_idents = set()
 
         def get_quantified_idents(node):
-            if node.data == 'constructor_prod' and node.children != [] and syn_conf.is_name(node.children[0]):
+            if node.data == 'constructor_prod' and node.children != [] and SyntaxConfig.is_name(node.children[0]):
                 ident = node.children[0].children[0].value
                 if ident.startswith('"') and ident.endswith('"'):
                     ident = ident[1:-1]
@@ -63,18 +63,14 @@ class GallinaTermParser:
                     node.height = max(node.height, c.height + 1)
                     children.append(c)
                 # Don't erase fully-qualified definition & theorem names
-                elif ((syn_conf.include_defs and syn_conf.is_label(node)) or
-                (syn_conf.include_paths and syn_conf.is_path(node))):
-                    ident_value = Tree(c.value, [])
-                    ident_wrapper = syn_conf.singleton_ident(ident_value)
-                    ident_value.height = 0
-                    ident_wrapper.height = 1
+                elif ((syn_conf.include_defs and SyntaxConfig.is_label(node)) or
+                (syn_conf.include_paths and SyntaxConfig.is_path(node))):
+                    ident_wrapper = SyntaxConfig.singleton_ident(c.value)
                     node.height = 2
                     children.append(ident_wrapper)
                 # Don't erase local variable names
-                elif (syn_conf.include_locals and syn_conf.is_local(node)):
-                    var_value = Tree(c.value, [])
-                    var_value.height = 0
+                elif (syn_conf.include_locals and SyntaxConfig.is_local(node)):
+                    var_value = SyntaxConfig.nonterminal_value(c.value)
                     node.height = 1
                     children.append(var_value)
             node.children = children
