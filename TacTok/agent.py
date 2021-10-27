@@ -102,7 +102,8 @@ class Agent:
       self.optimizer = optimizer
       self.dataloader = dataloader
       self.opts = opts
-      self.term_parser = GallinaTermParser(caching=True, include_locals=self.opts.include_locals, include_defs=self.opts.include_defs)
+      self.syn_conf = SyntaxConfig(opts.include_locals, opts.include_defs, opts.include_paths)
+      self.term_parser = GallinaTermParser(self.syn_conf, caching=True)
       self.projs_split = json.load(open(opts.projs_split))
 
 
