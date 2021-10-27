@@ -13,6 +13,7 @@ from random import random
 import pdb
 from hashlib import sha1
 import gc
+from syntax import SyntaxConfig
 from copy import deepcopy
 from time import time
 import numpy as np

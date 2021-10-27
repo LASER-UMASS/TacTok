@@ -163,10 +163,12 @@ class TermEncoder(nn.Module):
                     paths.update(c.children)
             if self.syn_conf.include_locals and self.syn_conf.is_local(node):
                 assert len(node.children) > 0
-            	localnodes.update(node.children)
+                localnodes.update(node.children)
 
         for ast in term_asts:
             traverse_postorder(ast, get_metadata)
+
+        pdb.set_trace()
 
         memory_cells = {} # node -> memory cell
         hidden_states = {} # node -> hidden state
