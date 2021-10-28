@@ -15,3 +15,11 @@ Makefile.conf
 .coqdeps.d
 coq/*
 TacTok/coqhammer/*
+TacTok/processed/
+TacTok/runs/
+output/
+data/
+models/
+proof_steps/
+*evaluation*
+*.tar.gz
