@@ -23,3 +23,6 @@ models/
 proof_steps/
 *evaluation*
 *.tar.gz
+coq_projects/
+sexp_cache/
+coq_serapi/
