@@ -1,13 +1,14 @@
 
 from collections import Counter
-from typing import List, Dict
+from typing import List, Dict, Tuple
+import typing
 
 
 class TrieNode:
     def __init__(self, char: str) -> None:
         self.char = char
         self.is_end = False
-        self.children = {}
+        self.children: Dict[str, TrieNode] = {}
 
 
 class Trie:
@@ -52,7 +53,7 @@ class BPETokenizer:
         vocab = list(base_vocab) + (["<unk>"] if include_unks else [])
         word_breakdowns = [(list(word), count) for word, count in word_counts.items()]
         for i in range(merges):
-            pair_counts = Counter()
+            pair_counts: typing.Counter[Tuple[str, str]] = Counter()
             for chunks, count in word_breakdowns:
                 for pair in zip(chunks[:-1], chunks[1:]):
                     pair_counts[pair] += count
@@ -110,16 +111,10 @@ class BPETokenizer:
 
 if __name__ == "__main__":
     tokenizer = \
-      BPETokenizer(["hug", "hug", "hug", "hug", "hug",
-                    "hug", "hug", "hug", "hug", "hug",
-
-                    "pug", "pug", "pug", "pug", "pug",
-
-                    "pun", "pun", "pun", "pun", "pun", "pun",
-                    "pun", "pun", "pun", "pun", "pun", "pun",
-
-                    "bun", "bun", "bun", "bun",
-                    "hugs", "hugs", "hugs", "hugs", "hugs"],
-                    2)
+      BPETokenizer({"hug": 10,
+                    "pug": 5,
+                    "pun": 12,
+                    "bun": 4,
+                    "hugs": 5}, 2)
     print(tokenizer.tokenize("hug pug pun bug mug"))
 
