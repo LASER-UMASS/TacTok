@@ -50,6 +50,7 @@ def parse_args():
     parser.add_argument('--bpe-merges', type=int, default=1024)
     parser.add_argument('--ident-vec-size', type=int, default=32)
     parser.add_argument('--max-ident-chunks', type=int, default=8)
+    parser.add_argument('--include-unks', action='store_true')
     parser.add_argument('--dump-subwords', type=str, default=None)
 
     # tactic decoder

@@ -144,7 +144,8 @@ class TermEncoder(nn.Module):
         if opts.use_locals_file:
             occurances.update(
               pickle.load(open(opts.locals_file, 'rb')))
-        self.name_tokenizer = BPETokenizer(occurances, opts.bpe_merges)
+        self.name_tokenizer = BPETokenizer(occurances, opts.bpe_merges,
+                                           include_unks=opts.include_unks)
         if opts.dump_subwords:
             with open(opts.dump_subwords, 'w') as f:
                 for subword in self.name_tokenizer.vocab:

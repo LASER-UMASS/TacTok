@@ -41,13 +41,15 @@ class Trie:
 
 
 class BPETokenizer:
-    def __init__(self, word_counts: Dict[str, int], merges: int) -> None:
-
+    def __init__(self, word_counts: Dict[str, int], merges: int,
+                 include_unks=False) -> None:
+        self.include_unks = include_unks
         base_vocab = list(set([x for l in [list(word) for word in word_counts.keys()]
                                for x in l]))
-        self.vocab_size = len(base_vocab) + merges + 1
+        self.vocab_size = len(base_vocab) + merges \
+          + (1 if include_unks else 0)
 
-        vocab = list(base_vocab) + ["<unk>"]
+        vocab = list(base_vocab) + (["<unk>"] if include_unks else [])
         word_breakdowns = [(list(word), count) for word, count in word_counts.items()]
         for i in range(merges):
             pair_counts = Counter()
@@ -98,7 +100,8 @@ class BPETokenizer:
                 while len(rest_chars) > 0:
                     prefix = self.tok_trie.longest_prefix(rest_chars)
                     if prefix == "":
-                        tokens.append("<unk>")
+                        if self.include_unks:
+                            tokens.append("<unk>")
                         rest_chars = rest_chars[1:]
                     else:
                         tokens.append(prefix)
