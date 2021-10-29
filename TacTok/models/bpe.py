@@ -44,48 +44,14 @@ class IndexedTrie:
             longest_match = (cur_node.index, sentence)
         return longest_match
 
-
-class BPETokenizer:
-    def __init__(self, word_counts: Dict[str, int], merges: int,
-                 include_unks: bool = False) -> None:
-        self.include_unks = include_unks
-        base_vocab = list(set([x for l in [list(word) for word in word_counts.keys()]
-                               for x in l]))
-        self.unk_index = len(base_vocab)
-        self.vocab_size = len(base_vocab) + merges \
-          + (1 if include_unks else 0)
-
-        vocab = list(base_vocab) + (["<unk>"] if include_unks else [])
-        word_breakdowns = [(list(word), count) for word, count in word_counts.items()]
-        for i in range(merges):
-            pair_counts: typing.Counter[Tuple[str, str]] = Counter()
-            for chunks, count in word_breakdowns:
-                for pair in zip(chunks[:-1], chunks[1:]):
-                    pair_counts[pair] += count
-            most_common_pair, mcp_count = pair_counts.most_common(1)[0]
-            new_word_breakdowns = []
-            for chunks, count in word_breakdowns:
-                new_chunks = []
-                i = 0
-                while i + 1 < len(chunks):
-                    if chunks[i] == most_common_pair[0] and \
-                       chunks[i+1] == most_common_pair[1]:
-                        new_chunks.append(most_common_pair[0] + most_common_pair[1])
-                        i += 2
-                    else:
-                        new_chunks.append(chunks[i])
-                        if i + 2 == len(chunks):
-                            new_chunks.append(chunks[i+1])
-                        i += 1
-                new_word_breakdowns.append((new_chunks, count))
-            word_breakdowns = new_word_breakdowns
-            vocab.append(most_common_pair[0] + most_common_pair[1])
-
+class LongestMatchTokenizer:
+    def __init__(self, vocab: List[str], include_unks: bool = False) -> None:
+        self.word_chunk_cache: Dict[str, List[Tuple[int, str]]] = {}
         self.vocab = vocab
-        self.word_chunk_cache = {}
-        for chunks, _ in word_breakdowns:
-            self.word_chunk_cache["".join(chunks)] = [(vocab.index(chunk), chunk)
-                                                      for chunk in chunks]
+        self.include_unks = include_unks
+        self.vocab_size = len(vocab) \
+          + (1 if include_unks else 0)
+        self.unk_index = len(vocab)
         self.tok_trie = IndexedTrie()
         for idx, word in enumerate(vocab):
             self.tok_trie.insert(idx, word)
@@ -104,24 +70,49 @@ class BPETokenizer:
                 tokens.extend(self.word_chunk_cache[word])
             else:
                 rest_chars = word
+                word_tokens: List[Tuple[int, str]] = []
                 while len(rest_chars) > 0:
                     prefix_pair = self.tok_trie.longest_prefix(rest_chars)
                     if prefix_pair is None:
                         if self.include_unks:
-                            tokens.append((self.unk_index, "<unk>"))
+                            word_tokens.append((self.unk_index, "<unk>"))
                         rest_chars = rest_chars[1:]
                     else:
                         pidx, prefix = prefix_pair
-                        tokens.append((pidx, prefix))
+                        word_tokens.append((pidx, prefix))
                         rest_chars = rest_chars[len(prefix):]
+                self.word_chunk_cache[word] = word_tokens
+                tokens.extend(word_tokens)
         return tokens
 
-if __name__ == "__main__":
-    tokenizer = \
-      BPETokenizer({"hug": 10,
-                    "pug": 5,
-                    "pun": 12,
-                    "bun": 4,
-                    "hugs": 5}, 2)
-    print(tokenizer.tokenize("hug pug pun bug mug"))
+def get_bpe_vocab(word_counts: Dict[str, int], merges: int) -> List[str]:
+    base_vocab = list(set([x for l in [list(word) for word in word_counts.keys()]
+                           for x in l]))
+
+    vocab = list(base_vocab)
+    word_breakdowns = [(list(word), count) for word, count in word_counts.items()]
+    for i in range(merges):
+        pair_counts: typing.Counter[Tuple[str, str]] = Counter()
+        for chunks, count in word_breakdowns:
+            for pair in zip(chunks[:-1], chunks[1:]):
+                pair_counts[pair] += count
+        most_common_pair, mcp_count = pair_counts.most_common(1)[0]
+        new_word_breakdowns = []
+        for chunks, count in word_breakdowns:
+            new_chunks = []
+            i = 0
+            while i + 1 < len(chunks):
+                if chunks[i] == most_common_pair[0] and \
+                   chunks[i+1] == most_common_pair[1]:
+                    new_chunks.append(most_common_pair[0] + most_common_pair[1])
+                    i += 2
+                else:
+                    new_chunks.append(chunks[i])
+                    if i + 2 == len(chunks):
+                        new_chunks.append(chunks[i+1])
+                    i += 1
+            new_word_breakdowns.append((new_chunks, count))
+        word_breakdowns = new_word_breakdowns
+        vocab.append(most_common_pair[0] + most_common_pair[1])
+    return vocab
 
