@@ -1,49 +1,53 @@
 
 from collections import Counter
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 import typing
 
 
-class TrieNode:
+class IndexedTrieNode:
     def __init__(self, char: str) -> None:
         self.char = char
         self.is_end = False
-        self.children: Dict[str, TrieNode] = {}
+        self.index: Optional[int] = None
+        self.children: Dict[str, IndexedTrieNode] = {}
 
 
-class Trie:
+class IndexedTrie:
     def __init__(self) -> None:
-        self.root = TrieNode("")
+        self.root = IndexedTrieNode("")
     
-    def insert(self, token: str) -> None:
+    def insert(self, idx: int, token: str) -> None:
         cur_node = self.root
         for char in token:
             if char in cur_node.children:
                 cur_node = cur_node.children[char]
             else:
-                new_node = TrieNode(char)
+                new_node = IndexedTrieNode(char)
                 cur_node.children[char] = new_node
                 cur_node = new_node
         cur_node.is_end = True
+        cur_node.index = idx
 
-    def longest_prefix(self, sentence: str) -> str:
+    def longest_prefix(self, sentence: str) -> Optional[Tuple[int, str]]:
         cur_node = self.root
-        longest_match = ""
+        longest_match: Optional[Tuple[int, str]] = None
         for idx, char in enumerate(sentence):
             if cur_node.is_end:
-                longest_match = sentence[:idx]
+                assert cur_node.index is not None
+                longest_match = (cur_node.index, sentence[:idx])
             if char in cur_node.children:
                 cur_node = cur_node.children[char]
             else:
                 return longest_match
         if cur_node.is_end:
-            longest_match = sentence
+            assert cur_node.index is not None
+            longest_match = (cur_node.index, sentence)
         return longest_match
 
 
 class BPETokenizer:
     def __init__(self, word_counts: Dict[str, int], merges: int,
-                 include_unks=False) -> None:
+                 include_unks: bool = False) -> None:
         self.include_unks = include_unks
         base_vocab = list(set([x for l in [list(word) for word in word_counts.keys()]
                                for x in l]))
@@ -79,33 +83,36 @@ class BPETokenizer:
         self.vocab = vocab
         self.word_chunk_cache = {}
         for chunks, _ in word_breakdowns:
-            self.word_chunk_cache["".join(chunks)] = chunks
-        self.tok_trie = Trie()
-        for word in vocab:
-            self.tok_trie.insert(word)
+            self.word_chunk_cache["".join(chunks)] = [(vocab.index(chunk), chunk)
+                                                      for chunk in chunks]
+        self.tok_trie = IndexedTrie()
+        for idx, word in enumerate(vocab):
+            self.tok_trie.insert(idx, word)
 
     def pre_tokenize(self, sentence: str) -> List[str]:
         return sentence.split(" ")
 
     def tokenize_to_idx(self, sentence: str) -> List[int]:
-        return [self.vocab.index(chunk) for chunk in
+        return [chunk_idx for chunk_idx, chunk_str in
                 self.tokenize(sentence)]
-    def tokenize(self, sentence: str) -> List[str]:
+    def tokenize(self, sentence: str) -> List[Tuple[int, str]]:
         words = self.pre_tokenize(sentence)
         tokens = []
+        unk_index = self.vocab.index("<unk>")
         for word in words:
             if word in self.word_chunk_cache:
                 tokens.extend(self.word_chunk_cache[word])
             else:
                 rest_chars = word
                 while len(rest_chars) > 0:
-                    prefix = self.tok_trie.longest_prefix(rest_chars)
-                    if prefix == "":
+                    prefix_pair = self.tok_trie.longest_prefix(rest_chars)
+                    if prefix_pair is None:
                         if self.include_unks:
-                            tokens.append("<unk>")
+                            tokens.append((unk_index, "<unk>"))
                         rest_chars = rest_chars[1:]
                     else:
-                        tokens.append(prefix)
+                        pidx, prefix = prefix_pair
+                        tokens.append((pidx, prefix))
                         rest_chars = rest_chars[len(prefix):]
         return tokens
 
