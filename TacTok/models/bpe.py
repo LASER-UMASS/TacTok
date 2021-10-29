@@ -49,9 +49,9 @@ class BPETokenizer:
     def __init__(self, word_counts: Dict[str, int], merges: int,
                  include_unks: bool = False) -> None:
         self.include_unks = include_unks
-        self.unk_index = len(base_vocab)
         base_vocab = list(set([x for l in [list(word) for word in word_counts.keys()]
                                for x in l]))
+        self.unk_index = len(base_vocab)
         self.vocab_size = len(base_vocab) + merges \
           + (1 if include_unks else 0)
 
