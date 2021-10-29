@@ -49,6 +49,7 @@ class BPETokenizer:
     def __init__(self, word_counts: Dict[str, int], merges: int,
                  include_unks: bool = False) -> None:
         self.include_unks = include_unks
+        self.unk_index = len(base_vocab)
         base_vocab = list(set([x for l in [list(word) for word in word_counts.keys()]
                                for x in l]))
         self.vocab_size = len(base_vocab) + merges \
@@ -98,7 +99,6 @@ class BPETokenizer:
     def tokenize(self, sentence: str) -> List[Tuple[int, str]]:
         words = self.pre_tokenize(sentence)
         tokens = []
-        unk_index = self.vocab.index("<unk>")
         for word in words:
             if word in self.word_chunk_cache:
                 tokens.extend(self.word_chunk_cache[word])
@@ -108,7 +108,7 @@ class BPETokenizer:
                     prefix_pair = self.tok_trie.longest_prefix(rest_chars)
                     if prefix_pair is None:
                         if self.include_unks:
-                            tokens.append((unk_index, "<unk>"))
+                            tokens.append((self.unk_index, "<unk>"))
                         rest_chars = rest_chars[1:]
                     else:
                         pidx, prefix = prefix_pair
