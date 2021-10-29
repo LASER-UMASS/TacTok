@@ -141,8 +141,9 @@ class TermEncoder(nn.Module):
         self.update_cell = InputOutputUpdateGate(opts.term_embedding_dim, self.vocab, opts,
                                                  nonlinear=torch.tanh)
         occurances = pickle.load(open(opts.globals_file, 'rb'))
-        occurances.update(
-          pickle.load(open(opts.locals_file, 'rb')))
+        if opts.use_locals_file:
+            occurances.update(
+              pickle.load(open(opts.locals_file, 'rb')))
         self.name_tokenizer = BPETokenizer(occurances, opts.bpe_merges)
         if opts.dump_subwords:
             with open(opts.dump_subwords, 'w') as f:
