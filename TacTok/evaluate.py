@@ -137,8 +137,10 @@ if __name__ == '__main__':
          os.makedirs(oup_dir)
     if opts.filter is None and opts.file is None and opts.file_idx is None:
         oup_file = os.path.join(oup_dir, 'results_%s.json' % str(opts.proj_idx))
-    elif opts.file_idx is not None:
+    elif opts.file_idx is not None and opts.proof is None:
         oup_file = os.path.join(oup_dir, 'results_%s_%s.json' % (str(opts.proj_idx), str(opts.file_idx)))
+    elif opts.file_idx is not None:
+        oup_file = os.path.join(oup_dir, f'results_{opts.proj_idx}_{opts.file_idx}_{opts.proof}.json')
     elif opts.file is None:
         oup_file = os.path.join(oup_dir, '%s.json' % opts.filter)
     elif opts.proof is None:
