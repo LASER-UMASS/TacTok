@@ -39,22 +39,19 @@ def unparse(node):
 
 
 class SerAPIWrapper:
-    EXCLUDED = {'coq', 'coq2html'}
-
     def __init__(self, coq_projects_path, timeout=600):
         self.timeout = timeout
         self.serapi = SerAPI(timeout)
         self.coq_projects_path = os.path.abspath(coq_projects_path)
-        self.load_projects()
         self.added_paths = {'SerTop'}
+        self.project = None
 
-    def load_projects(self):
-        coq_projects = Path(self.coq_projects_path)
-        for project in filter(Path.is_dir, coq_projects.iterdir()):
-            if project.name not in SerAPIWrapper.EXCLUDED:
-                self.load_project(project)
+    def set_project(self, project):
+        self.project = project
+        self.load_project(project)
 
     def load_project(self, project):
+        project = Path(self.coq_projects_path, project.stem)
         coq_project_files = set(project.glob('**/_CoqProject'))
         make_files = set(project.glob('**/Make'))
         config_files = coq_project_files.union(make_files)
@@ -81,11 +78,13 @@ class SerAPIWrapper:
         path = '.'.join(child.children[0].data for child in reversed(dir_path.children))
         if path not in self.added_paths:
             self.added_paths.add(path)
+            cmd = 'Require {}.'.format(path)
             try:
-                self.serapi.send_add('Require {}.'.format(path), False)
+                self.serapi.send_add(cmd, False)
             except Exception as e:
                 print('failed to import path {}'.format(path))
                 print('error: {}\n'.format(e))
+                print('original command: {}'.format('"{}"'.format(cmd)))
         try:
             name = self.serapi.print_constr(unparsed)
         except Exception as e:
