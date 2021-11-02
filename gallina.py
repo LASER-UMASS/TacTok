@@ -8,21 +8,14 @@ from serutils import SerAPIWrapper
 import logging
 logging.basicConfig(level=logging.DEBUG)
 from collections import defaultdict
-from TacTok.syntax import SyntaxConfig
+from syntax import SyntaxConfig
 
 
-def traverse_postorder(node, callback, parent_info=None, get_parent_info=None):
-    old_parent_info = parent_info
-    if get_parent_info is not None:
-        parent_info = get_parent_info(node, parent_info)
-
+def traverse_postorder(node, callback):
     for c in node.children:
         if isinstance(c, Tree):
-            traverse_postorder(c, callback, parent_info, get_parent_info)
-    if get_parent_info is not None:
-        callback(node, old_parent_info)
-    else:
-        callback(node)
+            traverse_postorder(c, callback)
+    callback(node)
 
 
 class GallinaTermParser:
@@ -61,13 +54,13 @@ class GallinaTermParser:
 
 
         # Postprocess: compute height, remove some tokens (variable names), make identifiers explicit
-        def postprocess(node, is_construct_child):
+        def postprocess(node):
+            children = []
             # Recover the constructor name
-            if node.data == 'constructor_construct':
+            if syn_conf.include_constructor_names and SyntaxConfig.is_constructor(node):
                 constructor_name = self.serapi.get_constr_name(node)
                 if constructor_name:
-                    node.children.append(SyntaxConfig.singleton_ident(constructor_name))
-            children = []
+                    children.append(SyntaxConfig.singleton_ident(constructor_name))
             node.height = 0
             for c in node.children:
                 if isinstance(c, Tree):
@@ -86,10 +79,7 @@ class GallinaTermParser:
                     children.append(var_value)
             node.children = children
 
-        def get_is_construct_child(node, is_construct_child):
-            return is_construct_child or node.data == 'constructor_construct'
-
-        traverse_postorder(ast, postprocess, False, get_is_construct_child)
+        traverse_postorder(ast, postprocess)
         return ast
 
 

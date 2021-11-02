@@ -22,7 +22,7 @@ if __name__ == '__main__':
     parser.add_argument('method', type=str)
     parser.add_argument('eval_id', type=str)
     parser.add_argument('--datapath', type=str, default='../data')
-    arser.add_argument('--coq_projects', type=str, default='../coq_projects', help='The folder for the coq projects')
+    parser.add_argument('--coq_projects', type=str, default='../coq_projects', help='The folder for the coq projects')
     parser.add_argument('--projs_split', type=str, default='../projs_split.json')
     parser.add_argument('--split', choices=['train', 'valid', 'test'], type=str, default='test')
     parser.add_argument('--file', type=str)
