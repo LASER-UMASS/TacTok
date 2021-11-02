@@ -48,6 +48,9 @@ if __name__ == '__main__':
     parser.add_argument('--num_tactics', type=int, default=15025)
     parser.add_argument('--tac_vocab_file', type=str, default='token_vocab.pickle')
     parser.add_argument('--cutoff_len', type=int, default=30)
+
+    parser.add_argument('--debug', action='store_true')
+
     opts = parser.parse_args()
     log(opts)
     opts.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

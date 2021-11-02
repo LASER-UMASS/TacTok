@@ -6,6 +6,7 @@ import sys
 sys.setrecursionlimit(100000)
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../')))
 from functools import partial
+from syntax import SyntaxConfig
 from gallina import GallinaTermParser
 from lark.exceptions import UnexpectedCharacters, ParseError
 from utils import iter_proofs, SexpCache
@@ -76,7 +77,7 @@ def process_proof(term_parser, filename, proof_data):
         assert step['command'][1] == 'VernacExtend'
         assert step['command'][0].endswith('.')
         # environment
-        env = filter_env(proof_data['env'])
+        env = filter_env(term_parser, proof_data['env'])
         # local context & goal
         if step['goal_ids']['fg'] == []:
             num_discarded += 1
@@ -107,6 +108,9 @@ def process_proof(term_parser, filename, proof_data):
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser(description='Extract the proof steps from CoqGym for trainig ASTactic via supervised learning')
+    arg_parser.add_argument('--no_defs', action='store_false', dest='include_defs', help='do not include the names of definitions and theorems in the model')
+    arg_parser.add_argument('--no_locals', action='store_false', dest='include_locals', help='do not include the names of local variables in the model')
+    arg_parser.add_argument('--no_paths', action='store_false', dest='include_paths', help='do not include the paths of definitions and theorems in the model')
     arg_parser.add_argument('--data_root', type=str, default='../data',
                                 help='The folder for CoqGym')
     arg_parser.add_argument('--coq_projects', type=str, default='../coq_projects',
@@ -116,8 +120,9 @@ if __name__ == '__main__':
     arg_parser.add_argument('--filter', type=str, help='filter the proofs')
     args = arg_parser.parse_args()
     print(args)
-
-    term_parser = GallinaTermParser(args.coq_projects, caching=True)
+    
+    syn_conf = SyntaxConfig(args.include_locals, args.include_defs, args.include_paths)
+    term_parser = GallinaTermParser(args.coq_projects, syn_conf, caching=True)
 
     iter_proofs(args.data_root, partial(process_proof, term_parser), include_synthetic=False, show_progress=True)
 

@@ -13,6 +13,7 @@ from random import random
 import pdb
 from hashlib import sha1
 import gc
+from syntax import SyntaxConfig
 from copy import deepcopy
 from time import time
 import numpy as np
@@ -29,10 +30,9 @@ def action_seq_loss(logits_batch, actions_batch, opts):
 
 
 # merge this with extract_proof_steps.py
-term_parser = GallinaTermParser(caching=True)
 sexp_cache = SexpCache('../sexp_cache', readonly=True)
 
-def filter_env(env):
+def filter_env(term_parser, env):
     filtered_env = []
     for const in [const for const in env['constants'] if const['qualid'].startswith('SerTop')][-10:]:
         ast = sexp_cache[const['sexp']]
@@ -40,7 +40,7 @@ def filter_env(env):
     return filtered_env
 
 
-def parse_goal(g): 
+def parse_goal(term_parser, g):
     goal = {'id': g['id'], 'text': g['type'], 'ast': term_parser.parse(g['sexp'])}
     local_context = []
     for i, h in enumerate(g['hypotheses']):
@@ -103,6 +103,8 @@ class Agent:
       self.optimizer = optimizer
       self.dataloader = dataloader
       self.opts = opts
+      self.syn_conf = SyntaxConfig(opts.include_locals, opts.include_defs, opts.include_paths)
+      self.term_parser = GallinaTermParser(self.syn_conf, caching=True)
       self.projs_split = json.load(open(opts.projs_split))
 
 
@@ -182,7 +184,7 @@ class Agent:
         assert 'hammer_' not in self.opts.method
         hammer_timeout = self.opts.hammer_timeout if 'ours' in self.opts.method else self.opts.timeout
 
-        with FileEnv(filename, self.opts.max_num_tactics, self.opts.timeout, with_hammer=with_hammer, hammer_timeout=hammer_timeout) as file_env:
+        with FileEnv(filename, self.opts.max_num_tactics, self.opts.timeout, debug=self.opts.debug, with_hammer=with_hammer, hammer_timeout=hammer_timeout) as file_env:
             results = []
             for proof_env in file_env:  # start a proof
                 if proof_name is not None and proof_env.proof['name'] != proof_name:
@@ -233,11 +235,11 @@ class Agent:
 
     def prove_DFS(self, proof_env, tac_template):
         obs = proof_env.init()
-        env = filter_env(obs['env'])
+        env = filter_env(self.term_parser, obs['env'])
         first_goal_signatures = {get_goal_signature(obs['fg_goals'][0])}
 
         # initialize the stack
-        local_context, goal = parse_goal(obs['fg_goals'][0])
+        local_context, goal = parse_goal(self.term_parser, obs['fg_goals'][0])
 
         f_top = open("baselines/top.pickle", 'rb')
         f_tac = open("baselines/tactic_list.pickle", 'rb')
@@ -301,7 +303,7 @@ class Agent:
                     script.pop()
                     continue
                 first_goal_signatures.add(sig)
-                local_context, goal = parse_goal(obs['fg_goals'][0])
+                local_context, goal = parse_goal(self.term_parser, obs['fg_goals'][0])
                 tactics = []
                 if 'greedy' in self.opts.method:
                     # choose from top
@@ -326,7 +328,7 @@ class Agent:
 
     def prove_IDDFS(self, proof_env, tac_template):
         obs = proof_env.init()
-        env = filter_env(obs['env'])
+        env = filter_env(self.term_parser, obs['env'])
         first_goal_signatures = {get_goal_signature(obs['fg_goals'][0])}
         depth_limit = self.opts.depth_limit
         traces = [[]]
@@ -347,7 +349,7 @@ class Agent:
                     num_tactics = self.opts.max_num_tactics - obs['num_tactics_left']
                     return False, script, time, num_tactics
                 # initialize the stack
-                local_context, goal = parse_goal(obs['fg_goals'][0])
+                local_context, goal = parse_goal(self.term_parser, obs['fg_goals'][0])
                 prev_seq = parse_script(script)    
                 tactics = self.model.beam_search(env, local_context, goal, prev_seq)
                 stack = [[tac_template % tac.to_tokens() for tac in tactics[::-1]]]
@@ -390,7 +392,7 @@ class Agent:
                             script.pop()
                             continue
                         first_goal_signatures.add(sig)
-                        local_context, goal = parse_goal(obs['fg_goals'][0])
+                        local_context, goal = parse_goal(self.term_parser, obs['fg_goals'][0])
                         prev_seq = parse_script(script)
                         tactics = self.model.beam_search(env, local_context, goal, prev_seq)
                         stack.append([tac_template % tac.to_tokens() for tac in tactics[::-1]])

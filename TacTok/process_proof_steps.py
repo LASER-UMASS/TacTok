@@ -3,6 +3,7 @@ from torch.utils.data import Dataset, DataLoader
 from options import parse_args
 import random
 from progressbar import ProgressBar
+from progressbar import progressbar
 import os
 import sys
 sys.setrecursionlimit(100000)
@@ -22,6 +23,8 @@ def tokenize_text(raw_text):
 	words = without_punc.split()
 	return words
 
+os.makedirs('processed/proof_steps/train', exist_ok=True)
+os.makedirs('processed/proof_steps/valid', exist_ok=True)
 
 proof_steps = glob(os.path.join('proof_steps', 'train/*.pickle')) + \
                                glob(os.path.join('proof_steps', 'valid/*.pickle'))
@@ -30,7 +33,7 @@ proofs = {}
 
 print(len(proof_steps))
 print("Collecting proofs from steps")
-for idx in range(len(proof_steps)):
+for idx in progressbar(range(len(proof_steps))):
 	f = open(proof_steps[idx], 'rb')
 	proof_step = pickle.load(f)
 	f.close()
@@ -42,7 +45,7 @@ for idx in range(len(proof_steps)):
 
 
 print("Generating new proof steps")
-for p_key in proofs:
+for p_key in progressbar(proofs):
 	seq_raw = [] # list of strings, each string is a command
 	seq_proc_separated = [] # list of lists of strings, each string is a token
 	seq_proc_complete = [] # list of strings, each string is a token

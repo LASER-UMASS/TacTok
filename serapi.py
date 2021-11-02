@@ -340,6 +340,8 @@ class SerAPI:
 
     def execute(self, cmd, return_ast=False):
         'Execute a vernac command'
+        if self.debug:
+            print("Running:", cmd)
         state_id, ast = self.send_add(cmd, return_ast)
         responses, _ = self.send('(Exec %d)' % state_id)
         return responses, sexpdata.dumps(ast)

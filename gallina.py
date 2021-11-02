@@ -4,19 +4,18 @@ from vernac_types import Constr__constr
 from lark import Lark, Transformer, Visitor, Discard
 from lark.lexer import Token
 from lark.tree import Tree
-from lark.tree import pydot__tree_to_png
 from serutils import SerAPIWrapper
 import logging
 logging.basicConfig(level=logging.DEBUG)
 from collections import defaultdict
-import re
-import pdb
+from TacTok.syntax import SyntaxConfig
 
 
 def traverse_postorder(node, callback, parent_info=None, get_parent_info=None):
     old_parent_info = parent_info
     if get_parent_info is not None:
         parent_info = get_parent_info(node, parent_info)
+
     for c in node.children:
         if isinstance(c, Tree):
             traverse_postorder(c, callback, parent_info, get_parent_info)
@@ -27,9 +26,9 @@ def traverse_postorder(node, callback, parent_info=None, get_parent_info=None):
 
 
 class GallinaTermParser:
-
-    def __init__(self, coq_projects_path="../coq_projects", caching=True):
+    def __init__(self, coq_projects_path=, syntax_config, caching=True):
         self.caching = caching
+        self.syntax_config = syntax_config
         t = Constr__constr()
         self.grammar = t.to_ebnf(recursive=True) + '''
         %import common.STRING_INNER
@@ -45,12 +44,13 @@ class GallinaTermParser:
 
 
     def parse_no_cache(self, term_str):
+        syn_conf = self.syntax_config
         ast = self.parser.parse(term_str)
 
         ast.quantified_idents = set()
 
         def get_quantified_idents(node):
-            if node.data == 'constructor_prod' and node.children != [] and node.children[0].data == 'constructor_name':
+            if node.data == 'constructor_prod' and node.children != [] and SyntaxConfig.is_name(node.children[0]):
                 ident = node.children[0].children[0].value
                 if ident.startswith('"') and ident.endswith('"'):
                     ident = ident[1:-1]
@@ -59,13 +59,6 @@ class GallinaTermParser:
         traverse_postorder(ast, get_quantified_idents)
         ast.quantified_idents = list(ast.quantified_idents)
 
-        def make_ident(value):
-            # Just make everything a nonterminal for compatibility
-            ident_value = Tree(value, [])
-            ident_wrapper = Tree('names__id__t', [ident_value])
-            ident_value.height = 0
-            ident_wrapper.height = 1
-            return ident_wrapper
 
         # Postprocess: compute height, remove some tokens (variable names), make identifiers explicit
         def postprocess(node, is_construct_child):
@@ -73,20 +66,24 @@ class GallinaTermParser:
             if node.data == 'constructor_construct':
                 constructor_name = self.serapi.get_constr_name(node)
                 if constructor_name:
-                    node.children.append(make_ident(constructor_name))
+                    node.children.append(SyntaxConfig.singleton_ident(constructor_name))
             children = []
             node.height = 0
             for c in node.children:
                 if isinstance(c, Tree):
                     node.height = max(node.height, c.height + 1)
                     children.append(c)
-                # Don't erase fully-qualified names
-                elif node.data == 'names__label__t' or node.data == 'constructor_dirpath':
+                # Don't erase fully-qualified definition & theorem names
+                elif ((syn_conf.include_defs and SyntaxConfig.is_label(node)) or
+                (syn_conf.include_paths and SyntaxConfig.is_path(node))):
+                    ident_wrapper = SyntaxConfig.singleton_ident(c.value)
                     node.height = 2
-                    children.append(make_ident(c.value))
-                # Don't erase the node if it is part of a constructor
-                elif is_construct_child:
-                    children.append(c)
+                    children.append(ident_wrapper)
+                # Don't erase local variable names
+                elif (syn_conf.include_locals and SyntaxConfig.is_local(node)):
+                    var_value = SyntaxConfig.nonterminal_value(c.value)
+                    node.height = 1
+                    children.append(var_value)
             node.children = children
 
         def get_is_construct_child(node, is_construct_child):
