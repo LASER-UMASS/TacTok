@@ -26,7 +26,7 @@ def traverse_postorder(node, callback, parent_info=None, get_parent_info=None):
 
 
 class GallinaTermParser:
-    def __init__(self, coq_projects_path=, syntax_config, caching=True):
+    def __init__(self, coq_projects_path, syntax_config, caching=True):
         self.caching = caching
         self.syntax_config = syntax_config
         t = Constr__constr()

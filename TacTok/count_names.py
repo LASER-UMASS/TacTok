@@ -99,6 +99,8 @@ if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser(description='Count occurrences of named datatypes and constants in the data')
     arg_parser.add_argument('--data_root', type=str, default='../data',
                                 help='The folder for CoqGym')
+    arg_parser.add_argument('--coq_projects', type=str, default='../coq_projects',
+                                help='The folder for the coq projects')
     arg_parser.add_argument('--output', type=str, default='./names/',
                                 help='The output file')
     arg_parser.add_argument('--no_defs', action='store_false', dest='include_defs', help='do not include the names of definitions and theorems in the model')
@@ -108,7 +110,7 @@ if __name__ == '__main__':
     print(args)
     
     syntax_config = SyntaxConfig(args.include_locals, args.include_defs, args.include_paths)
-    term_parser = GallinaTermParser(syn_conf, caching=True)
+    term_parser = GallinaTermParser(args.coq_projects, syn_conf, caching=True)
 
     iter_proofs(args.data_root, count, include_synthetic=False, show_progress=True)
 

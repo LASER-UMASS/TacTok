@@ -13,7 +13,6 @@ from utils import iter_proofs, SexpCache
 import argparse
 from hashlib import md5
 from agent import filter_env
-import pdb
 
 
 sexp_cache = SexpCache('../sexp_cache', readonly=True)
