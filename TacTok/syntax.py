@@ -41,6 +41,11 @@ class SyntaxConfig:
     def is_label(node):
         return (node.data == 'names__label__t')
 
+    # The node is a constructor
+    @staticmethod
+    def is_constructor(node):
+        return (node.data == 'constructor_construct')
+
     # Make a new value as a nonterminal with an empty list of terminals
     @staticmethod
     def nonterminal_value(value):

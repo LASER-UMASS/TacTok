@@ -18,6 +18,7 @@ projs_split = json.load(open('../projs_split.json'))
 
 defs = {}
 local_defs = {}
+constructor_names = {}
 paths = {}
 merged = {}
 
@@ -68,6 +69,10 @@ def count(filename, proof_data):
             ident = node.children[0].data
             incr_ident(ident, local_defs)
             incr_ident(ident, merged)
+        elif syn_conf.include_constructor_names and SyntaxConfig.is_constructor(node):
+            ident = term_parser.serapi.get_constr_name(node)
+            incr_ident(ident, constructor_names)
+            incr_ident(ident, merged)
 
     traverse_preorder(goal_ast, count_in_goal)
 
@@ -85,6 +90,9 @@ def dump_idents(dirname):
 
     if syn_conf.include_locals:
         dump(dirname, 'locals.pickle', local_defs)
+
+    if syn_conf.include_constructor_names:
+        dump(dirname, 'constructors.pickle', constructor_names)
 
     if syn_conf.include_paths:
         dump(dirname, 'paths.pickle', paths)
