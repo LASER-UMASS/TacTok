@@ -109,6 +109,8 @@ if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser(description='Extract the proof steps from CoqGym for trainig ASTactic via supervised learning')
     arg_parser.add_argument('--no_defs', action='store_false', dest='include_defs', help='do not include the names of definitions and theorems in the model')
     arg_parser.add_argument('--no_locals', action='store_false', dest='include_locals', help='do not include the names of local variables in the model')
+    arg_parser.add_argument('--no_constructors', action='store_false', dest='include_constructor_names',
+                        help='do not include constructor names in the model')
     arg_parser.add_argument('--no_paths', action='store_false', dest='include_paths', help='do not include the paths of definitions and theorems in the model')
     arg_parser.add_argument('--data_root', type=str, default='../data',
                                 help='The folder for CoqGym')
@@ -120,7 +122,8 @@ if __name__ == '__main__':
     args = arg_parser.parse_args()
     print(args)
     
-    syn_conf = SyntaxConfig(args.include_locals, args.include_defs, args.include_paths)
+    syn_conf = SyntaxConfig(args.include_locals, args.include_defs, args.include_paths,
+                            args.include_constructor_names)
     term_parser = GallinaTermParser(args.coq_projects, syn_conf, caching=True)
 
     iter_proofs(args.data_root, partial(process_proof, term_parser), include_synthetic=False, show_progress=True)

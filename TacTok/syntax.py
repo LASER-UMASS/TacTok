@@ -4,10 +4,12 @@ from lark.tree import Tree
 
 class SyntaxConfig:
 
-    def __init__(self, include_locals=True, include_defs=True, include_paths=True):
+    def __init__(self, include_locals=True, include_defs=True, include_paths=True,
+                 include_constructor_names=True):
         self.include_locals = include_locals
         self.include_defs = include_defs
         self.include_paths = include_paths
+        self.include_constructor_names = include_constructor_names
 
     # The node is an identifier
     @staticmethod
@@ -23,7 +25,7 @@ class SyntaxConfig:
     @staticmethod
     def is_name(node):
         return (node.data == 'constructor_name')
-    
+
     # The node is a local variable (for now, whenever it is a variable or a name)
     @staticmethod
     def is_local(node):
@@ -53,4 +55,3 @@ class SyntaxConfig:
         ident_wrapper = Tree('names__id__t', [value_tree])
         ident_wrapper.height = 1
         return ident_wrapper
-

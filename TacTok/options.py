@@ -19,6 +19,7 @@ def parse_args():
     # global options
     parser.add_argument('--no_defs', action='store_false', dest='include_defs', help='do not include the names of definitions and theorems in the model')
     parser.add_argument('--no_locals', action='store_false', dest='include_locals', help='do not include the names of local variables in the model')
+    parser.add_argument('--no_constructors', action='store_false', dest='include_constructor_names', help='do not include constructor names in the model')
     parser.add_argument('--no_paths', action='store_false', dest='include_paths', help='do not include fully qualified paths in the model')
 
     # experimental setup

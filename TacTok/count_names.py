@@ -21,8 +21,6 @@ local_defs = {}
 paths = {}
 merged = {}
 
-syn_conf = SyntaxConfig(include_locals=True, include_defs=True, include_paths=True)
-term_parser = GallinaTermParser(syn_conf, caching=True)
 sexp_cache = SexpCache('../sexp_cache', readonly=True)
 
 # Preorder traversal makes it easier
@@ -105,11 +103,12 @@ if __name__ == '__main__':
                                 help='The output file')
     arg_parser.add_argument('--no_defs', action='store_false', dest='include_defs', help='do not include the names of definitions and theorems in the model')
     arg_parser.add_argument('--no_locals', action='store_false', dest='include_locals', help='do not include the names of local variables in the model')
+    arg_parser.add_argument('--no_constructors', action='store_false', dest='include_constructor_names', help='do not include constructor names in the model')
     arg_parser.add_argument('--no_paths', action='store_false', dest='include_paths', help='do not include the paths of definitions and theorems in the model')
     args = arg_parser.parse_args()
     print(args)
     
-    syntax_config = SyntaxConfig(args.include_locals, args.include_defs, args.include_paths)
+    syn_conf = SyntaxConfig(args.include_locals, args.include_defs, args.include_paths, args.include_constructor_names)
     term_parser = GallinaTermParser(args.coq_projects, syn_conf, caching=True)
 
     iter_proofs(args.data_root, count, include_synthetic=False, show_progress=True)
