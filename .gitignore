@@ -6,8 +6,6 @@
 *.o
 *.cmi
 *.cmx
-*.mli
-*.ml
 Makefile.coq.conf
 Makefile.coq
 Makefile.conf
