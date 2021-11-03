@@ -28,7 +28,7 @@ for proj_idx in $(eval echo "{0..$(($NUM_PROJS - 1))}"); do
       SOME_PROOF_OUTPUT=false
       potential_matches=(${OUTPUT_DIR}/results_${proj_idx}_${file_idx}_*.json)
       if (( ${#potential_matches[@]} )); then
-        PROOFS=$(python print_proof_names.py --proj=${PROJ} --file_idx=${file_idx})
+        PROOFS=$(python ${TT_DIR}/print_proof_names.py --proj=${PROJ} --file_idx=${file_idx})
         NUM_PROOFS=$(echo "$PROOFS" | wc -l)
         for proof_idx in $(eval echo "{0..$(($NUM_PROOFS - 1))}"); do
           PROOF=$(echo "$PROOFS" | awk "NR==($proof_idx+1)")

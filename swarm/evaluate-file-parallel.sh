@@ -17,7 +17,7 @@ FILE_IDX=$3
 shift 3
 PROJ=$(jq -r ".projs_test[]" ${TT_DIR}/projs_split.json | awk "NR==(${PROJ_IDX}+1)")
 
-PROOFS=$(python print_proof_names.py --proj=${PROJ} --file_idx=${FILE_IDX})
+PROOFS=$(python $TT_DIR/print_proof_names.py --proj=${PROJ} --file_idx=${FILE_IDX})
 NUM_PROOFS=$(echo "$PROOFS" | wc -l)
 
 mkdir -p output/evaluate/${EVAL_ID}
