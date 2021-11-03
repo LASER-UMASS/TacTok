@@ -14,5 +14,8 @@ COQ_ROOT=$(pwd)/coq
 COQBIN=$COQ_ROOT/bin/
 export PATH=$COQBIN:$PATH
 
+EVAL_ID=$1
+shift 1
+
 cd TacTok
-python evaluate.py ours tactok_results --path runs/tok/checkpoints/model_003.pth "$@"
+python evaluate.py ours ${EVAL_ID} --path runs/${EVAL_ID}/checkpoints/model_003.pth "$@"
