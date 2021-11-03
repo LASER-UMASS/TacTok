@@ -10,7 +10,7 @@ import os
 from gallina import traverse_postorder
 import pdb
 import pickle
-from .bpe import BPETokenizer
+from .bpe import LongestMatchTokenizer, get_bpe_vocab
 
 nonterminals = [
     'constr__constr',
