@@ -5,15 +5,7 @@ shopt -s nullglob
 
 [[ "$#" -ne 1 ]] && echo "Wrong number of parameters! This script takes one argument, a directory to search" && exit 1
 
-# determine physical directory of this script
-src="${BASH_SOURCE[0]}"
-while [ -L "$src" ]; do
-  dir="$(cd -P "$(dirname "$src")" && pwd)"
-  src="$(readlink "$src")"
-  [[ $src != /* ]] && src="$dir/$src"
-done
-MYDIR="$(cd -P "$(dirname "$src")" && pwd)"
-TT_DIR=$MYDIR/../
+TT_DIR=$HOME/work/TacTok
 
 OUTPUT_DIR=$1
 NUM_PROJS=$(jq ".projs_test[]" ${TT_DIR}/projs_split.json | wc -l)

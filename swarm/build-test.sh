@@ -1,14 +1,6 @@
 #!/usr/bin/env bash
 
-# determine physical directory of this script
-src="${BASH_SOURCE[0]}"
-while [ -L "$src" ]; do
-  dir="$(cd -P "$(dirname "$src")" && pwd)"
-  src="$(readlink "$src")"
-  [[ $src != /* ]] && src="$dir/$src"
-done
-MYDIR="$(cd -P "$(dirname "$src")" && pwd)"
-TT_DIR=$MYDIR/../
+TT_DIR=$HOME/work/TacTok
 
 PS=$TT_DIR/projs_split.json
 NUM_PROJS=$(jq ".projs_test | length" $PS)
