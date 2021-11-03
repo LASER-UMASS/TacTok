@@ -25,20 +25,20 @@ class IndexedTrie:
     def insert(self, idx: int, token: str) -> None:
         # Start at the root
         cur_node = self.root
-	# For each character in the string, descend the tree to the child
-	# corresponding to that character.
-	for char in token:
+        # For each character in the string, descend the tree to the child
+        # corresponding to that character.
+        for char in token:
             if char in cur_node.children:
                 cur_node = cur_node.children[char]
             else:
-		# If the node doesn't already exist for that character, create
-		# it.
-		new_node = self.IndexedTrieNode(char)
+                # If the node doesn't already exist for that character, create
+                # it.
+                new_node = self.IndexedTrieNode(char)
                 cur_node.children[char] = new_node
                 cur_node = new_node
-	# When we've reached the end of the inserted string, mark the current
-	# node as a word end.
-	cur_node.is_end = True
+        # When we've reached the end of the inserted string, mark the current
+        # node as a word end.
+        cur_node.is_end = True
         # And set it's index to the inserted index.
         cur_node.index = idx
 
@@ -49,24 +49,24 @@ class IndexedTrie:
         # Start at the root
         cur_node = self.root
         longest_match: Optional[Tuple[int, str]] = None
-	# Descend the tree for each character, keeping track of any node we hit
-	# which is an allowed word end.
-	for idx, char in enumerate(sentence):
+        # Descend the tree for each character, keeping track of any node we hit
+        # which is an allowed word end.
+        for idx, char in enumerate(sentence):
             if cur_node.is_end:
-		# If we hit a word end, keep track of it in case we don't find
-		# any longer matches.
-		assert cur_node.index is not None
+                # If we hit a word end, keep track of it in case we don't find
+                # any longer matches.
+                assert cur_node.index is not None
                 longest_match = (cur_node.index, sentence[:idx])
-	    # If we have a child for the next character, we can continue down
-	    # the tree. Otherwise, return the longest match we've found, or
-	    # None if we haven't found one.
-	    if char in cur_node.children:
+            # If we have a child for the next character, we can continue down
+            # the tree. Otherwise, return the longest match we've found, or
+            # None if we haven't found one.
+            if char in cur_node.children:
                 cur_node = cur_node.children[char]
             else:
                 return longest_match
-	# If the node we end on is an end node, then the whole thing is our
-	# match
-	if cur_node.is_end:
+        # If the node we end on is an end node, then the whole thing is our
+        # match
+        if cur_node.is_end:
             assert cur_node.index is not None
             longest_match = (cur_node.index, sentence)
         return longest_match
@@ -76,16 +76,16 @@ class IndexedTrie:
 # do that effiently.
 class LongestMatchTokenizer:
     def __init__(self, vocab: List[str], include_unks: bool = False) -> None:
-	# Since there aren't going to be *that* many unique words, cache their
-	# tokenizations.
-	self.word_chunk_cache: Dict[str, List[Tuple[int, str]]] = {}
+        # Since there aren't going to be *that* many unique words, cache their
+        # tokenizations.
+        self.word_chunk_cache: Dict[str, List[Tuple[int, str]]] = {}
 
         # Store vocab for reference
         self.vocab = vocab
 
-	# Includings unks is optional; if so, they get the last index, and
-	# increase our vocab size by one.
-	self.include_unks = include_unks
+        # Includings unks is optional; if so, they get the last index, and
+        # increase our vocab size by one.
+        self.include_unks = include_unks
         self.vocab_size = len(vocab) \
           + (1 if include_unks else 0)
         self.unk_index = len(vocab)
@@ -106,9 +106,9 @@ class LongestMatchTokenizer:
     # Tokenize to a list of tuples of vocabulary indices and token strings.
     def tokenize(self, sentence: str) -> List[Tuple[int, str]]:
         tokens = []
-	# Pre-tokenize into space-separated words; our tokens will never span a
-	# space.
-	words = self.pre_tokenize(sentence)
+        # Pre-tokenize into space-separated words; our tokens will never span a
+        # space.
+        words = self.pre_tokenize(sentence)
         for word in words:
             # Use the word -> tokenlist cache if possible
             if word in self.word_chunk_cache:
@@ -156,9 +156,9 @@ def get_bpe_vocab(word_counts: Dict[str, int], merges: int) -> List[str]:
     # (["b", "e", "s", "t"], 14).
     word_breakdowns = [(list(word), count) for word, count in word_counts.items()]
     for i in range(merges):
-	# Keep the count of each subsequent pair of chunks in our current
-	# iteration.
-	pair_counts: typing.Counter[Tuple[str, str]] = Counter()
+        # Keep the count of each subsequent pair of chunks in our current
+        # iteration.
+        pair_counts: typing.Counter[Tuple[str, str]] = Counter()
         for chunks, count in word_breakdowns:
             for pair in zip(chunks[:-1], chunks[1:]):
                 pair_counts[pair] += count
@@ -169,9 +169,9 @@ def get_bpe_vocab(word_counts: Dict[str, int], merges: int) -> List[str]:
         for chunks, count in word_breakdowns:
             new_chunks = []
             i = 0
-	    # Loop through the chunks for each word, and merge any subsequent
-	    # ones that match the most common pair.
-	    while i + 1 < len(chunks):
+            # Loop through the chunks for each word, and merge any subsequent
+            # ones that match the most common pair.
+            while i + 1 < len(chunks):
                 if chunks[i] == most_common_pair[0] and \
                    chunks[i+1] == most_common_pair[1]:
                     new_chunks.append(most_common_pair[0] + most_common_pair[1])
