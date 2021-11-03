@@ -10,6 +10,7 @@ import os
 from gallina import traverse_postorder
 import pdb
 import pickle
+from .bpe import LongestMatchTokenizer, get_bpe_vocab
 
 nonterminals = [
     'constr__constr',
@@ -72,12 +73,14 @@ nonterminals = [
 
 class InputOutputUpdateGate(nn.Module):
 
-    def __init__(self, hidden_dim, vocab, nonlinear):
+    def __init__(self, hidden_dim, vocab, opts, nonlinear):
         super().__init__()
         self.nonlinear = nonlinear
         self.vocab = vocab
         k = 1. / math.sqrt(hidden_dim)
-        self.W = nn.Parameter(torch.Tensor(hidden_dim, len(self.vocab) + hidden_dim))
+        self.W = nn.Parameter(torch.Tensor(hidden_dim, 
+                                           len(vocab) + opts.ident_vec_size 
+                                           + hidden_dim))
         nn.init.uniform_(self.W, -k, k)
         self.b = nn.Parameter(torch.Tensor(hidden_dim))
         nn.init.uniform_(self.b, -k, k)
@@ -95,7 +98,7 @@ class ForgetGates(nn.Module):
         self.opts = opts
         k = 1. / math.sqrt(hidden_dim)
         # the weight for the input
-        self.W_if = nn.Parameter(torch.Tensor(hidden_dim, len(vocab)))
+        self.W_if = nn.Parameter(torch.Tensor(hidden_dim, len(vocab) + opts.ident_vec_size))
         nn.init.uniform_(self.W_if, -k, k)
         # the weight for the hidden
         self.W_hf = nn.Parameter(torch.Tensor(hidden_dim, hidden_dim))
@@ -130,10 +133,30 @@ class TermEncoder(nn.Module):
         super().__init__()
         self.opts = opts
         self.vocab = opts.vocab + nonterminals
-        self.input_gate = InputOutputUpdateGate(opts.term_embedding_dim, self.vocab, nonlinear=torch.sigmoid)
+        self.input_gate = InputOutputUpdateGate(opts.term_embedding_dim, self.vocab, opts,
+                                                nonlinear=torch.sigmoid)
         self.forget_gates = ForgetGates(opts.term_embedding_dim, self.vocab, opts)
-        self.output_gate = InputOutputUpdateGate(opts.term_embedding_dim, self.vocab, nonlinear=torch.sigmoid)
-        self.update_cell = InputOutputUpdateGate(opts.term_embedding_dim, self.vocab, nonlinear=torch.tanh)
+        self.output_gate = InputOutputUpdateGate(opts.term_embedding_dim, self.vocab, opts,
+                                                 nonlinear=torch.sigmoid)
+        self.update_cell = InputOutputUpdateGate(opts.term_embedding_dim, self.vocab, opts,
+                                                 nonlinear=torch.tanh)
+        # Load the vocabulary passed in --globals-file; this defaults to the
+        # globals vocabulary but can be set to the merged one instead.
+        occurances = pickle.load(open(opts.globals_file, 'rb'))
+        # If not passed --no-locals, merge in the locals vocabulary.
+        if opts.use_locals_file:
+            occurances.update(
+              pickle.load(open(opts.locals_file, 'rb')))
+        self.name_tokenizer = \
+            LongestMatchTokenizer(get_bpe_vocab(occurances, opts.bpe_merges),
+                                  include_unks=opts.include_unks)
+        if opts.dump_subwords:
+            with open(opts.dump_subwords, 'w') as f:
+                for subword in self.name_tokenizer.vocab:
+                    print(subword, file=f)
+
+        self.name_encoder = nn.RNN(self.name_tokenizer.vocab_size + 1, 
+                                   opts.ident_vec_size, batch_first=True)
 
     def get_vocab_idx(self, node, localnodes):
         data = node.data
@@ -145,6 +168,46 @@ class TermEncoder(nn.Module):
         else:
             return vocab.index('<unk-ident>')
 
+    def normalize_length(self, length, pad, seq):
+        if len(seq) > length:
+            return seq[:length]
+        elif len(seq) < length:
+            return seq + [pad] * (length - len(seq))
+        else:
+            return seq
+
+    def encode_identifiers(self, nodes):
+        encoder_initial_hidden = torch.zeros(1, len(nodes), 
+                                             self.opts.ident_vec_size)
+        node_identifier_chunks = \
+          torch.tensor([self.normalize_length(
+                          self.opts.max_ident_chunks,
+                          0,
+                          # Add 1 here to account for the padding value of zero
+                          [tok + 1 for tok in 
+                           self.name_tokenizer.tokenize_to_idx(
+                             node.children[0].data)]
+                          # This checks to see if the node is some sort of
+                          # identifier. Once path stuff is merged, we'll use
+                          # the path function for this.
+                           if (node.data == "constructor_var" or
+                               node.data == "constructor_name" or
+                               node.data == "names__id__t") else
+                           [])
+                        for node in nodes],
+                       device=self.opts.device)
+        one_hot_chunks = \
+          torch.zeros(len(nodes), self.opts.max_ident_chunks,
+                      self.name_tokenizer.vocab_size + 1,
+                      device=self.opts.device)\
+               .scatter_(2, 
+                         node_identifier_chunks.unsqueeze(2),
+                         1.0)
+        
+        output, final_hidden = self.name_encoder(one_hot_chunks,
+                                                 encoder_initial_hidden)
+        return final_hidden[0]
+
     def forward(self, term_asts):
         # the height of a node determines when it can be processed
         height2nodes = defaultdict(set)
@@ -154,10 +217,9 @@ class TermEncoder(nn.Module):
             height2nodes[node.height].add(node)
             if self.opts.include_locals and (node.data == 'constructor_var' or node.data == 'constructor_name'):
                 assert len(node.children) > 0
-            	localnodes.update(node.children)
+                localnodes.update(node.children)
 
         for ast in term_asts:
-            print(ast)
             traverse_postorder(ast, get_metadata)
 
         memory_cells = {} # node -> memory cell
@@ -170,9 +232,14 @@ class TermEncoder(nn.Module):
             # sum up the hidden states of the children
             h_sum = []
             c_remains = []
-            x = torch.zeros(len(nodes_at_height), len(self.vocab), device=self.opts.device) \
-                     .scatter_(1, torch.tensor([self.get_vocab_idx(node, localnodes) for node in nodes_at_height], 
-                                                 device=self.opts.device).unsqueeze(1), 1.0)
+            x0 = torch.zeros(len(nodes_at_height), len(self.vocab), 
+                             device=self.opts.device) \
+                      .scatter_(1, torch.tensor([self.get_vocab_idx(node, localnodes) for node in nodes_at_height], 
+                                                device=self.opts.device).unsqueeze(1), 1.0)
+
+            x1 = self.encode_identifiers(nodes_at_height)
+            x = torch.cat((x0, x1), dim=1)
+            
 
             h_sum = torch.zeros(len(nodes_at_height), self.opts.term_embedding_dim).to(self.opts.device)
             h_children = []

@@ -43,6 +43,16 @@ def parse_args():
     parser.add_argument('--local_vocab_file', type=str, default='./names/locals-known-40.pickle')
     parser.add_argument('--cutoff_len', type=int, default=30)
 
+    # Subwords options
+    parser.add_argument('--globals-file', type=str, default='./names/names.pickle')
+    parser.add_argument('--locals-file', type=str, default='./names/locals.pickle')
+    parser.add_argument('--no-locals-file', action='store_const', value=None, dest='locals_file')
+    parser.add_argument('--bpe-merges', type=int, default=1024)
+    parser.add_argument('--ident-vec-size', type=int, default=32)
+    parser.add_argument('--max-ident-chunks', type=int, default=8)
+    parser.add_argument('--include-unks', action='store_true')
+    parser.add_argument('--dump-subwords', type=str, default=None)
+
     # tactic decoder
     parser.add_argument('--size_limit', type=int, default=50)
     parser.add_argument('--embedding_dim', type=int, default=128, help='dimension of the grammar embeddings')

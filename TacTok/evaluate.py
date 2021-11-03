@@ -15,6 +15,7 @@ from progressbar import ProgressBar
 from agent import Agent
 from models.prover import Prover
 import pdb
+import pickle
 
 
 if __name__ == '__main__':
@@ -39,17 +40,34 @@ if __name__ == '__main__':
     parser.add_argument('--num_tactic_candidates', type=int, default=20)
     parser.add_argument('--lens_norm', type=float, default=0.5, help='lengths normalization')
     parser.add_argument('--tac_grammar', type=str, default='tactics.ebnf')
-    parser.add_argument('--term_embedding_dim', type=int, default=256)
+    parser.add_argument('--term_embedding_dim', type=int, default=128)
     parser.add_argument('--size_limit', type=int, default=50)
-    parser.add_argument('--embedding_dim', type=int, default=256, help='dimension of the grammar embeddings')
-    parser.add_argument('--symbol_dim', type=int, default=256, help='dimension of the terminal/nonterminal symbol embeddings')
-    parser.add_argument('--hidden_dim', type=int, default=256, help='dimension of the LSTM controller')
+    parser.add_argument('--embedding_dim', type=int, default=128, help='dimension of the grammar embeddings')
+    parser.add_argument('--symbol_dim', type=int, default=128, help='dimension of the terminal/nonterminal symbol embeddings')
+    parser.add_argument('--hidden_dim', type=int, default=128, help='dimension of the LSTM controller')
     parser.add_argument('--seed', type=int, default=0)
     parser.add_argument('--num_tactics', type=int, default=15025)
     parser.add_argument('--tac_vocab_file', type=str, default='token_vocab.pickle')
     parser.add_argument('--cutoff_len', type=int, default=30)
 
+    # global options
+    parser.add_argument('--no_defs', action='store_false', dest='include_defs', help='do not include the names of definitions and theorems in the model')
+    parser.add_argument('--no_locals', action='store_false', dest='include_locals', help='do not include the names of local variables in the model')
     parser.add_argument('--debug', action='store_true')
+    
+    # term encoder
+    parser.add_argument('--def_vocab_file', type=str, default='./names/names-known-200.pickle')
+    parser.add_argument('--local_vocab_file', type=str, default='./names/locals-known-40.pickle')
+
+    # subword options
+    parser.add_argument('--globals-file', type=str, default='./names/names.pickle')
+    parser.add_argument('--locals-file', type=str, default='./names/locals.pickle')
+    parser.add_argument('--no-locals-file', action='store_false', dest='use_locals_file')
+    parser.add_argument('--bpe-merges', type=int, default=1024)
+    parser.add_argument('--ident-vec-size', type=int, default=32)
+    parser.add_argument('--max-ident-chunks', type=int, default=8)
+    parser.add_argument('--include-unks', action='store_true')
+    parser.add_argument('--dump-subwords', type=str, default=None)
 
     opts = parser.parse_args()
     log(opts)
@@ -63,6 +81,18 @@ if __name__ == '__main__':
     np.random.seed(opts.seed)
     random.seed(opts.seed)
 
+    # The identifier vocabulary
+    vocab = []
+    if opts.include_defs:
+        vocab += list(pickle.load(open(opts.def_vocab_file, 'rb')).keys())
+        vocab += ['<unk-ident>']
+
+	# The local variable vocabulary (same)
+    if opts.include_locals:
+        vocab += list(pickle.load(open(opts.local_vocab_file, 'rb')).keys())
+        vocab += ['<unk-local>']
+
+    opts.vocab = vocab
     projs_test = ["weak-up-to", "buchberger", "jordan-curve-theorem", "dblib", "disel", "zchinese", "zfc", "dep-map", "chinese", "UnifySL", "hoare-tut", "huffman", "PolTac", "angles", "coq-procrastination", "coq-library-undecidability", "tree-automata", "coquelicot", "fermat4", "demos", "coqoban", "goedel", "verdi-raft", "verdi", "zorns-lemma", "coqrel", "fundamental-arithmetics"]
 
     if 'ours' in opts.method:
@@ -90,6 +120,7 @@ if __name__ == '__main__':
             files.extend(glob(os.path.join(opts.datapath, '%s/**/*.json' % proj), recursive=True))
 
     if opts.file_idx is not None:
+        assert opts.file_idx < len(files), f"Error: Passed file index {opts.file_idx} but there are only {len(files)} files"
         files = [files[opts.file_idx]]
 
     if opts.filter:
@@ -109,8 +140,10 @@ if __name__ == '__main__':
          os.makedirs(oup_dir)
     if opts.filter is None and opts.file is None and opts.file_idx is None:
         oup_file = os.path.join(oup_dir, 'results_%s.json' % str(opts.proj_idx))
-    elif opts.file_idx is not None:
+    elif opts.file_idx is not None and opts.proof is None:
         oup_file = os.path.join(oup_dir, 'results_%s_%s.json' % (str(opts.proj_idx), str(opts.file_idx)))
+    elif opts.file_idx is not None:
+        oup_file = os.path.join(oup_dir, f'results_{opts.proj_idx}_{opts.file_idx}_{opts.proof}.json')
     elif opts.file is None:
         oup_file = os.path.join(oup_dir, '%s.json' % opts.filter)
     elif opts.proof is None:
