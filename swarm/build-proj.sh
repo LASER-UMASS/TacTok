@@ -6,14 +6,7 @@ set -e
 
 TT_DIR=$HOME/work/TacTok
 
-read-opam.sh
-opam switch "4.07.1+flambda"
-eval $(opam env)
-
-cd $TT_DIR
-COQ_ROOT=$(pwd)/coq
-COQBIN=$COQ_ROOT/bin/
-export PATH=$COQBIN:$PATH
+source ${TT_DIR}/prelude.sh
 
 PROJ=$(jq -r ".projs_test[]" projs_split.json | awk "NR==$1")
 cd coq_projects
