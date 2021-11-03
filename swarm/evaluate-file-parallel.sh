@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 
-TT_DIR=$HOME/work/TacTok
+# determine physical directory of this script
+src="${BASH_SOURCE[0]}"
+while [ -L "$src" ]; do
+  dir="$(cd -P "$(dirname "$src")" && pwd)"
+  src="$(readlink "$src")"
+  [[ $src != /* ]] && src="$dir/$src"
+done
+MYDIR="$(cd -P "$(dirname "$src")" && pwd)"
+TT_DIR=$MYDIR/../
 
 [[ "$#" -lt 3 ]] && echo "Wrong number of parameters! This script takes at least three arguments, an evaluation id, a project id, and a file id" && exit 1
 EVAL_ID=$1
@@ -18,5 +26,5 @@ for proof_idx in $(eval echo "{0..$(($NUM_PROOFS - 1))}"); do
   PROOF=$(echo "$PROOFS" | awk "NR==(${proof_idx}+1)")
   sbatch -p longq \
     --output=output/evaluate/${EVAL_ID}/evaluate_proj_${PROJ_IDX}_${FILE_IDX}_${proof_idx}.out \
-    jobs/evaluate_proj.sh ${EVAL_ID} --proj_idx ${PROJ_IDX} --file_idx ${FILE_IDX} --proof ${PROOF} "$@"
+    ${TT_DIR}/swarm/evaluate-proj.sh ${EVAL_ID} --proj_idx ${PROJ_IDX} --file_idx ${FILE_IDX} --proof ${PROOF} "$@"
 done
