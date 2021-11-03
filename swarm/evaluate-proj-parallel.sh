@@ -19,6 +19,7 @@ NUM_FILES=$(find ${TT_DIR}/data/${PROJ} -name "*.json" | wc -l)
 mkdir -p output/evaluate/${EVAL_ID}
 
 for file_idx in $(eval echo "{0..$(($NUM_FILES - 1))}"); do
-  sbatch -p longq --output=output/evaluate/${EVAL_ID}/evaluate_proj_${PROJ_IDX}_${file_idx}.out \
+  sbatch -p longq -J ${EVAL_ID}-evaluate-file \
+    --output=output/evaluate/${EVAL_ID}/evaluate_proj_${PROJ_IDX}_${file_idx}.out \
     $TT_DIR/swarm/evaluate-proj.sh ${EVAL_ID} --proj_idx $PROJ_IDX --file_idx ${file_idx} "$@"
 done

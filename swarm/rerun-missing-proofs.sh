@@ -23,7 +23,7 @@ while IFS=, read -r proj_idx proj_name file_idx file_name proof_idx proof_name; 
   if [[ proof_idx != "" ]]; then 
       ${TT_DIR}/swarm/evaluate-file-parallel.sh ${EVAL_ID} ${proj_idx} ${file_idx} "$@"
   else
-      sbatch -p longq \
+      sbatch -p longq -J ${EVAL_ID}-evaluate-proof \
         --output=output/evaluate/${EVAL_ID}/evaluate_proj_${proj_idx}_${file_idx}_${proof_idx}.out \
         $TT_DIR/swarm/evaluate-proj.sh ${EVAL_ID} \
           --proj_idx ${proj_idx} --file_idx ${file_idx} --proof=${proof_name} "$@"
