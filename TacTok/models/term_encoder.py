@@ -236,10 +236,7 @@ class TermEncoder(nn.Module):
                              device=self.opts.device) \
                       .scatter_(1, torch.tensor([self.get_vocab_idx(node, localnodes) for node in nodes_at_height], 
                                                 device=self.opts.device).unsqueeze(1), 1.0)
-            # for node in nodes_at_height:
-            #     if node.data == "constructor_name" or node.data == "constructor_var":
-            #         assert len(node.children) > 0, node
-                    
+
             x1 = self.encode_identifiers(nodes_at_height)
             x = torch.cat((x0, x1), dim=1)
             
