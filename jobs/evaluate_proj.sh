@@ -4,7 +4,8 @@ set -e
 
 TT_DIR=$HOME/work/TacTok
 
-echo "Evaluating project $1 on ${HOST}"
+[[ "$#" -lt 1 ]] && echo "Wrong number of parameters! This script takes at least one argument, a weights id" && exit 1
+
 $HOME/opam-scripts/read-opam.sh
 opam switch "4.07.1+flambda"
 eval $(opam env)
