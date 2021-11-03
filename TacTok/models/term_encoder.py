@@ -187,7 +187,10 @@ class TermEncoder(nn.Module):
                           [tok + 1 for tok in 
                            self.name_tokenizer.tokenize_to_idx(
                              node.children[0].data)]
-                           if (node.data == "constructor_var" or
+			  # This checks to see if the node is some sort of
+			  # identifier. Once path stuff is merged, we'll use
+			  # the path function for this.
+			   if (node.data == "constructor_var" or
                                node.data == "constructor_name" or
                                node.data == "names__id__t") else
                            [])
