@@ -6,7 +6,7 @@ set -e
 
 TT_DIR=$HOME/work/TacTok
 
-source ${TT_DIR}/prelude.sh
+source ${TT_DIR}/swarm/prelude.sh
 
 PROJ=$(jq -r ".projs_test[]" projs_split.json | awk "NR==$1")
 cd coq_projects
