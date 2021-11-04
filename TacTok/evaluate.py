@@ -16,10 +16,12 @@ from agent import Agent
 from models.prover import Prover
 import pdb
 import pickle
+import common_args
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    common_args.add_common_args(parser)
     parser.add_argument('method', type=str)
     parser.add_argument('eval_id', type=str)
     parser.add_argument('--datapath', type=str, default='../data')
@@ -39,35 +41,8 @@ if __name__ == '__main__':
     parser.add_argument('--beam_width', type=int, default=20)  # lots of timeout when >200
     parser.add_argument('--num_tactic_candidates', type=int, default=20)
     parser.add_argument('--lens_norm', type=float, default=0.5, help='lengths normalization')
-    parser.add_argument('--tac_grammar', type=str, default='tactics.ebnf')
-    parser.add_argument('--term_embedding_dim', type=int, default=128)
-    parser.add_argument('--size_limit', type=int, default=50)
-    parser.add_argument('--embedding_dim', type=int, default=128, help='dimension of the grammar embeddings')
-    parser.add_argument('--symbol_dim', type=int, default=128, help='dimension of the terminal/nonterminal symbol embeddings')
-    parser.add_argument('--hidden_dim', type=int, default=128, help='dimension of the LSTM controller')
+
     parser.add_argument('--seed', type=int, default=0)
-    parser.add_argument('--num_tactics', type=int, default=15025)
-    parser.add_argument('--tac_vocab_file', type=str, default='token_vocab.pickle')
-    parser.add_argument('--cutoff_len', type=int, default=30)
-
-    # global options
-    parser.add_argument('--no_defs', action='store_false', dest='include_defs', help='do not include the names of definitions and theorems in the model')
-    parser.add_argument('--no_locals', action='store_false', dest='include_locals', help='do not include the names of local variables in the model')
-    parser.add_argument('--debug', action='store_true')
-    
-    # term encoder
-    parser.add_argument('--def_vocab_file', type=str, default='./names/names-known-200.pickle')
-    parser.add_argument('--local_vocab_file', type=str, default='./names/locals-known-40.pickle')
-
-    # subword options
-    parser.add_argument('--globals-file', type=str, default='./names/names.pickle')
-    parser.add_argument('--locals-file', type=str, default='./names/locals.pickle')
-    parser.add_argument('--no-locals-file', action='store_false', dest='use_locals_file')
-    parser.add_argument('--bpe-merges', type=int, default=1024)
-    parser.add_argument('--ident-vec-size', type=int, default=32)
-    parser.add_argument('--max-ident-chunks', type=int, default=8)
-    parser.add_argument('--include-unks', action='store_true')
-    parser.add_argument('--dump-subwords', type=str, default=None)
 
     opts = parser.parse_args()
     log(opts)
