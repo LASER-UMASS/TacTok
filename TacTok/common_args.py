@@ -26,6 +26,7 @@ def add_common_args(parser: argparse.ArgumentParser):
     parser.add_argument('--max-ident-chunks', type=int, default=8)
     parser.add_argument('--include-unks', action='store_true')
     parser.add_argument('--dump-subwords', type=str, default=None)
+    parser.add_argument('--case-insensitive-idents', action='store_true')
 
     # tactic decoder
     parser.add_argument('--size_limit', type=int, default=50)

@@ -147,6 +147,8 @@ class TermEncoder(nn.Module):
         if opts.use_locals_file:
             occurances.update(
               pickle.load(open(opts.locals_file, 'rb')))
+        if opts.case_insensitive_idents:
+            occurances = Counter({word.lower(): count for (word,count) in occurances.items()})
         self.name_tokenizer = \
             LongestMatchTokenizer(get_bpe_vocab(occurances, opts.bpe_merges),
                                   include_unks=opts.include_unks)
@@ -186,7 +188,8 @@ class TermEncoder(nn.Module):
                           # Add 1 here to account for the padding value of zero
                           [tok + 1 for tok in 
                            self.name_tokenizer.tokenize_to_idx(
-                             node.children[0].data)]
+                             node.children[0].data.lower() if self.opts.case_insensitive_idents
+                             else node.children[0].data)]
                           # This checks to see if the node is some sort of
                           # identifier. Once path stuff is merged, we'll use
                           # the path function for this.
