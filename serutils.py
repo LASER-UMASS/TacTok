@@ -3,6 +3,7 @@ import re
 from lark import Token
 from pathlib import Path
 from serapi import SerAPI
+from syntax import SyntaxConfig
 
 CONSTRUCTOR_NONTERMINALS = {
     'constructor_construct': '(Construct ({} {}))',
@@ -39,19 +40,14 @@ def unparse(node):
 
 
 class SerAPIWrapper:
-    def __init__(self, coq_projects_path, timeout=600):
+    def __init__(self, coq_projects_path, timeout=6):
         self.timeout = timeout
         self.serapi = SerAPI(timeout)
         self.coq_projects_path = os.path.abspath(coq_projects_path)
         self.added_paths = {'SerTop'}
-        self.project = None
 
-    def set_project(self, project):
-        self.project = project
-        self.load_project(project)
-
-    def load_project(self, project):
-        project = Path(self.coq_projects_path, project.stem)
+    def load_project(self, project_name):
+        project = Path(self.coq_projects_path, project_name)
         coq_project_files = set(project.glob('**/_CoqProject'))
         make_files = set(project.glob('**/Make'))
         config_files = coq_project_files.union(make_files)

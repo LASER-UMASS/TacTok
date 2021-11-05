@@ -11,11 +11,17 @@ from collections import defaultdict
 from syntax import SyntaxConfig
 
 
-def traverse_postorder(node, callback):
+def traverse_postorder(node, callback, parent_info=None, get_parent_info=None):
+    old_parent_info = parent_info
+    if get_parent_info is not None:
+        parent_info = get_parent_info(node, parent_info)
     for c in node.children:
         if isinstance(c, Tree):
-            traverse_postorder(c, callback)
-    callback(node)
+            traverse_postorder(c, callback, parent_info, get_parent_info)
+    if get_parent_info is not None:
+        callback(node, old_parent_info)
+    else:
+        callback(node)
 
 
 class GallinaTermParser:
@@ -54,13 +60,8 @@ class GallinaTermParser:
 
 
         # Postprocess: compute height, remove some tokens (variable names), make identifiers explicit
-        def postprocess(node):
+        def postprocess(node, is_construct_child):
             children = []
-            # Recover the constructor name
-            if syn_conf.include_constructor_names and SyntaxConfig.is_constructor(node):
-                constructor_name = self.serapi.get_constr_name(node)
-                if constructor_name:
-                    children.append(SyntaxConfig.singleton_ident(constructor_name))
             node.height = 0
             for c in node.children:
                 if isinstance(c, Tree):
@@ -77,9 +78,22 @@ class GallinaTermParser:
                     var_value = SyntaxConfig.nonterminal_value(c.value)
                     node.height = 1
                     children.append(var_value)
+                # Don't erase if part of constructor
+                elif is_construct_child:
+                    children.append(c)
+
+             # Recover constructor names
+            if syn_conf.include_constructor_names and SyntaxConfig.is_constructor(node):
+                constructor_name = self.serapi.get_constr_name(node)
+                if constructor_name:
+                    children.append(SyntaxConfig.singleton_ident(constructor_name))
+
             node.children = children
 
-        traverse_postorder(ast, postprocess)
+        def get_is_construct_child(node, is_construct_child):
+            return is_construct_child or SyntaxConfig.is_constructor(node)
+
+        traverse_postorder(ast, postprocess, False, get_is_construct_child)
         return ast
 
 

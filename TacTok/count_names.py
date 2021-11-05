@@ -69,10 +69,12 @@ def count(filename, proof_data):
             ident = node.children[0].data
             incr_ident(ident, local_defs)
             incr_ident(ident, merged)
-        elif syn_conf.include_constructor_names and SyntaxConfig.is_constructor(node):
-            ident = term_parser.serapi.get_constr_name(node)
-            incr_ident(ident, constructor_names)
-            incr_ident(ident, merged)
+        elif syn_conf.include_constructor_names and SyntaxConfig.is_constructor(node) and node.children:
+            child = node.children.pop()
+            if SyntaxConfig.is_ident(child):
+                ident = child.children[0].data
+                incr_ident(ident, constructor_names)
+                incr_ident(ident, merged)
 
     traverse_preorder(goal_ast, count_in_goal)
 
