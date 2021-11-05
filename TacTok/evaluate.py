@@ -10,7 +10,7 @@ sys.setrecursionlimit(100000)
 sys.path.append(os.path.normpath(os.path.dirname(os.path.realpath(__file__))))
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../')))
 from hashlib import md5
-from utils import log
+from utils import log, iter_coq_files
 from progressbar import ProgressBar
 from agent import Agent
 from models.prover import Prover
@@ -98,12 +98,13 @@ if __name__ == '__main__':
 
     print(files)
     results = []
-    bar = ProgressBar(max_value=len(files))
-    for i, f in enumerate(files):
-        print('file: ', f)
+
+    def add_results(file):
+        print('file: ', file)
         #print('cuda memory allocated before file: ', torch.cuda.memory_allocated(opts.device), file=sys.stderr)
-        results.extend(agent.evaluate(f, opts.proof))
-        bar.update(i)
+        results.extend(agent.evaluate(file, opts.proof))
+
+    iter_coq_files(files, add_results, show_progress=True, proj_callback=agent.term_parser.load_project)
 
     oup_dir = os.path.join(opts.output_dir, opts.eval_id)
     if not os.path.exists(oup_dir):

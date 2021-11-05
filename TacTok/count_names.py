@@ -121,7 +121,7 @@ if __name__ == '__main__':
     syn_conf = SyntaxConfig(args.include_locals, args.include_defs, args.include_paths, args.include_constructor_names)
     term_parser = GallinaTermParser(args.coq_projects, syn_conf, caching=True)
 
-    iter_proofs(args.data_root, count, include_synthetic=False, show_progress=True)
+    iter_proofs(args.data_root, count, include_synthetic=False, show_progress=True, proj_callback=term_parser.load_project)
 
     dump_idents(args.output)
 

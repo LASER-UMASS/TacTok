@@ -126,7 +126,8 @@ if __name__ == '__main__':
                             args.include_constructor_names)
     term_parser = GallinaTermParser(args.coq_projects, syn_conf, caching=True)
 
-    iter_proofs(args.data_root, partial(process_proof, term_parser), include_synthetic=False, show_progress=True)
+    iter_proofs(args.data_root, partial(process_proof, term_parser), include_synthetic=False,
+                show_progress=True, proj_callback=term_parser.load_project)
 
     for split in ['train', 'valid']:
         for i, step in enumerate(proof_steps[split]):
