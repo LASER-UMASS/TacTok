@@ -45,6 +45,7 @@ def parse_args():
     parser.add_argument('--def_vocab_file', type=str, default='./names/names-known-200.pickle')
     parser.add_argument('--local_vocab_file', type=str, default='./names/locals-known-40.pickle')
     parser.add_argument('--path_vocab_file', type=str, default='./names/paths-known-200.pickle')
+    parser.add_argument('--constructor_vocab_file', type=str, default='./names/constructors-known-200.pickle')
     parser.add_argument('--cutoff_len', type=int, default=30)
 
     # tactic decoder
@@ -90,6 +91,10 @@ def parse_args():
     if opts.include_paths:
         vocab += list(pickle.load(open(opts.path_vocab_file, 'rb')).keys())
         vocab += ['<unk-path>']
+
+    if opts.include_constructor_names:
+        vocab += list(pickle.load(open(opts.constructor_vocab_file, 'rb')).keys())
+        vocab += ['<unk-constructor>']
 
     opts.vocab = vocab
 

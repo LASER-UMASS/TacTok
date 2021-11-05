@@ -138,7 +138,7 @@ class TermEncoder(nn.Module):
         self.output_gate = InputOutputUpdateGate(opts.term_embedding_dim, self.vocab, nonlinear=torch.sigmoid)
         self.update_cell = InputOutputUpdateGate(opts.term_embedding_dim, self.vocab, nonlinear=torch.tanh)
 
-    def get_vocab_idx(self, node, localnodes, paths):
+    def get_vocab_idx(self, node, localnodes, paths, cnames):
         data = node.data
         vocab = self.vocab
         if data in vocab:
@@ -147,6 +147,8 @@ class TermEncoder(nn.Module):
             return vocab.index('<unk-local>')
         elif node in paths:
             return vocab.index('<unk-path>')
+        elif node in cnames:
+            return vocab.index('<unk-constructor>')
         else:
             return vocab.index('<unk-ident>')
 
@@ -155,6 +157,7 @@ class TermEncoder(nn.Module):
         height2nodes = defaultdict(set)
         localnodes = set()
         paths = set()
+        cnames = set()
         
         def get_metadata(node):
             height2nodes[node.height].add(node)
@@ -165,6 +168,9 @@ class TermEncoder(nn.Module):
             if self.syn_conf.include_locals and SyntaxConfig.is_local(node):
                 assert len(node.children) > 0
                 localnodes.update(node.children)
+            if self.syn_conf.include_constructor_names and SyntaxConfig.is_constructor(node):
+                child = node.children.pop()
+                cnames.add(child.children[0])
 
         for ast in term_asts:
             traverse_postorder(ast, get_metadata)
@@ -180,7 +186,7 @@ class TermEncoder(nn.Module):
             h_sum = []
             c_remains = []
             x = torch.zeros(len(nodes_at_height), len(self.vocab), device=self.opts.device) \
-                     .scatter_(1, torch.tensor([self.get_vocab_idx(node, localnodes, paths) for node in nodes_at_height], 
+                     .scatter_(1, torch.tensor([self.get_vocab_idx(node, localnodes, paths, cnames) for node in nodes_at_height],
                                                  device=self.opts.device).unsqueeze(1), 1.0)
 
             h_sum = torch.zeros(len(nodes_at_height), self.opts.term_embedding_dim).to(self.opts.device)
