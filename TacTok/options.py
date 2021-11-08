@@ -30,7 +30,6 @@ def parse_args():
     parser.add_argument('--smoke', action='store_true')
     parser.add_argument('--seed', type=int, default=0)
     parser.add_argument('--filter', type=str)
-    parser.add_argument('--debug', action='store_true')
 
     # optimization
     parser.add_argument('--optimizer', type=str, default='RMSprop')

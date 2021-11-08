@@ -16,6 +16,7 @@ def add_common_args(parser: argparse.ArgumentParser):
     parser.add_argument('--tac_vocab_file', type=str, default='token_vocab.pickle')
     parser.add_argument('--def_vocab_file', type=str, default='./names/names-known-200.pickle')
     parser.add_argument('--local_vocab_file', type=str, default='./names/locals-known-40.pickle')
+    parser.add_argument('--path_vocab_file', type=str, default='./names-paths-known-200.pickle')
     parser.add_argument('--cutoff_len', type=int, default=30)
 
     # Subwords options
