@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import math
-from collections import defaultdict
+from collections import defaultdict, Counter
 from time import time
 from itertools import chain
 from lark.tree import Tree
