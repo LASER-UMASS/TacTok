@@ -6,6 +6,17 @@ TT_DIR=$HOME/work/TacTok
 
 EVAL_ID=$1
 shift 1
+DEST="$TT_DIR/TacTok/evaluation/$EVAL_ID"
+
+if [ -d $DEST ]; then
+    read -r -p "Destination directory exists. Remove it? [y/N] " input
+    case $input in 
+        [yY][eE][sS]|[yY])
+        rm -r "$DEST" ;;
+        *)
+        echo "Aborting..." && exit 1 ;;
+    esac
+fi
 
 for proj_idx in {0..26}; do
     $TT_DIR/swarm/evaluate-proj-parallel.sh ${EVAL_ID} $proj_idx "$@"
