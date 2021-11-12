@@ -118,7 +118,7 @@ class Agent:
             use_teacher_forcing = random() < self.opts.teacher_forcing
             asts, loss = self.model(data_batch['env'], data_batch['local_context'], 
                                     data_batch['goal'], data_batch['tactic_actions'], use_teacher_forcing, data_batch['prev_tokens'])
-            log('\nteacher forcing = %s, loss = %f' % (str(use_teacher_forcing), loss.item()))
+            # log('\nteacher forcing = %s, loss = %f' % (str(use_teacher_forcing), loss.item()))
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step() 
