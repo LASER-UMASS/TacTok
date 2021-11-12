@@ -169,8 +169,9 @@ class TermEncoder(nn.Module):
                 assert len(node.children) > 0
                 localnodes.update(node.children)
             if self.syn_conf.include_constructor_names and SyntaxConfig.is_constructor(node):
-                child = node.children.pop()
-                cnames.add(child.children[0])
+                child = node.children[-1]
+                if SyntaxConfig.is_ident(child):
+                    cnames.add(child.children[0])
 
         for ast in term_asts:
             traverse_postorder(ast, get_metadata)
