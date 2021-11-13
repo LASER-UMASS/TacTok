@@ -21,6 +21,7 @@ def add_common_args(parser: argparse.ArgumentParser):
     parser.add_argument('--merge_vocab', action='store_true', help='Merge all identifier vocabularies, with a single unknown')
 
     # Subwords options
+    parser.add_argument('--merged-file', type=str, default='./names/merged.pickle')
     parser.add_argument('--globals-file', type=str, default='./names/names.pickle')
     parser.add_argument('--locals-file', type=str, default='./names/locals.pickle')
     parser.add_argument('--no-locals-file', action='store_false', dest='use_locals_file')

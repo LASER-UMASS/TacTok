@@ -142,11 +142,16 @@ class TermEncoder(nn.Module):
                                                  nonlinear=torch.sigmoid)
         self.update_cell = InputOutputUpdateGate(opts.term_embedding_dim, self.vocab, opts,
                                                  nonlinear=torch.tanh)
-        # Load the vocabulary passed in --globals-file; this defaults to the
-        # globals vocabulary but can be set to the merged one instead.
+        # By default, load the vocabulary passed in --globals-file; this defaults to the
+        # globals vocabulary but can be set to any other by command line.
         occurances = pickle.load(open(opts.globals_file, 'rb'))
-        # If not passed --no-locals, merge in the locals vocabulary.
-        if opts.use_locals_file:
+        
+        # Non-default vocabularies
+        if opts.merge_vocab:
+            # If passed --merge_vocab, use the merged vocabulary instead
+            occurances = pickle.load(open(opts.merged_file, 'rb'))
+        elif opts.use_locals_file:
+            # Otherwise, if not passed --no-locals, merge in the locals vocabulary.
             occurances.update(
               pickle.load(open(opts.locals_file, 'rb')))
         if opts.case_insensitive_idents:
