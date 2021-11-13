@@ -18,6 +18,7 @@ def add_common_args(parser: argparse.ArgumentParser):
     parser.add_argument('--local_vocab_file', type=str, default='./names/locals-known-40.pickle')
     parser.add_argument('--path_vocab_file', type=str, default='./names/paths-known-200.pickle')
     parser.add_argument('--cutoff_len', type=int, default=30)
+    parser.add_argument('--merge_vocab', action='store_true', help='Merge all identifier vocabularies, with a single unknown')
 
     # Subwords options
     parser.add_argument('--globals-file', type=str, default='./names/names.pickle')

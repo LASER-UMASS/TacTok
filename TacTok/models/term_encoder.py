@@ -165,11 +165,12 @@ class TermEncoder(nn.Module):
     def get_vocab_idx(self, node, localnodes, paths):
         data = node.data
         vocab = self.vocab
+        merge_vocab = self.opts.merge_vocab
         if data in vocab:
             return vocab.index(data)
-        elif node in localnodes:
+        elif (node in localnodes) and not merge_vocab:
             return vocab.index('<unk-local>')
-        elif node in paths:
+        elif (node in paths) and not merge_vocab:
             return vocab.index('<unk-path>')
         else:
             return vocab.index('<unk-ident>')
@@ -196,12 +197,9 @@ class TermEncoder(nn.Module):
                            self.name_tokenizer.tokenize_to_idx(
                              node.children[0].data.lower() if self.opts.case_insensitive_idents
                              else node.children[0].data)]
-                          # This checks to see if the node is some sort of
-                          # identifier. Once path stuff is merged, we'll use
-                          # the path function for this.
-                           if (node.data == "constructor_var" or
-                               node.data == "constructor_name" or
-                               node.data == "names__id__t") else
+                          # This checks to see if the node is some sort of identifier,
+                          # including an identifier that makes up part of a path
+                           if (SyntaxConfig.is_local(node) || SyntaxConfig.is_ident(node)) else
                            [])
                         for node in nodes],
                        device=self.opts.device)
