@@ -204,7 +204,7 @@ class TermEncoder(nn.Module):
                              else node.children[0].data)]
                           # This checks to see if the node is some sort of identifier,
                           # including an identifier that makes up part of a path
-                           if (SyntaxConfig.is_local(node) || SyntaxConfig.is_ident(node)) else
+                           if (SyntaxConfig.is_local(node) or SyntaxConfig.is_ident(node)) else
                            [])
                         for node in nodes],
                        device=self.opts.device)
