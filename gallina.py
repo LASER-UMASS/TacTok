@@ -9,6 +9,7 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 from collections import defaultdict
 from syntax import SyntaxConfig
+from utils import log
 
 
 def traverse_postorder(node, callback, parent_info=None, get_parent_info=None):
@@ -25,7 +26,7 @@ def traverse_postorder(node, callback, parent_info=None, get_parent_info=None):
 
 
 class GallinaTermParser:
-    def __init__(self, coq_projects_path, syntax_config, caching=True):
+    def __init__(self, coq_projects_path, syntax_config, caching=True, use_serapi=True):
         self.caching = caching
         self.syntax_config = syntax_config
         t = Constr__constr()
@@ -39,7 +40,9 @@ class GallinaTermParser:
         self.parser = Lark(StringIO(self.grammar), start='constr__constr', parser='lalr')
         if caching:
             self.cache = {}
-        self.serapi = SerAPIWrapper(coq_projects_path)
+        self.serapi = None
+        if use_serapi:
+            self.serapi = SerAPIWrapper(coq_projects_path)
 
     def load_project(self, proj):
         self.serapi.load_project(proj)
@@ -82,6 +85,7 @@ class GallinaTermParser:
                     children.append(var_value)
                 # Don't erase if part of constructor
                 elif is_construct_child:
+                    node.height = 1
                     children.append(c)
 
              # Recover constructor names

@@ -11,6 +11,7 @@ from syntax import SyntaxConfig
 from gallina import traverse_postorder
 import pdb
 import pickle
+from utils import log
 
 nonterminals = [
     'constr__constr',

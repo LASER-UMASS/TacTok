@@ -21,6 +21,7 @@ def parse_args():
     parser.add_argument('--no_locals', action='store_false', dest='include_locals', help='do not include the names of local variables in the model')
     parser.add_argument('--no_constructors', action='store_false', dest='include_constructor_names', help='do not include constructor names in the model')
     parser.add_argument('--no_paths', action='store_false', dest='include_paths', help='do not include fully qualified paths in the model')
+    parser.add_argument('--training', action='store_false', dest='include_serapi', help='training (so do not initialize serapi)')
 
     # experimental setup
     parser.add_argument('--include_synthetic', action='store_true')
@@ -81,7 +82,7 @@ def parse_args():
     vocab = []
     if opts.include_defs:
         vocab += list(pickle.load(open(opts.def_vocab_file, 'rb')).keys())
-        vocab += ['<unk-ident>']
+    vocab += ['<unk-ident>']
 
     # The local variable vocabulary
     if opts.include_locals:
