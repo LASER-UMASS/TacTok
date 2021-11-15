@@ -85,7 +85,7 @@ class GallinaTermParser:
                     children.append(var_value)
                 # Don't erase if part of constructor
                 elif is_construct_child:
-                    node.height = 1
+                    node.height = max(node.height, c.height + 1)
                     children.append(c)
 
              # Recover constructor names
