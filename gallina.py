@@ -85,8 +85,9 @@ class GallinaTermParser:
                     children.append(var_value)
                 # Don't erase if part of constructor
                 elif is_construct_child:
+                    var_value = SyntaxConfig.nonterminal_value(c.value)
                     node.height = 1
-                    children.append(c)
+                    children.append(var_value)
 
              # Recover constructor names
             if syn_conf.include_constructor_names and SyntaxConfig.is_constructor(node):
