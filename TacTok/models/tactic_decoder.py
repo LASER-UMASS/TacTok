@@ -81,7 +81,12 @@ class TacticDecoder(nn.Module):
         self.lex_rule_embeddings = nn.Embedding(len(self.grammar.terminal_symbols), opts.embedding_dim)
         self.default_action_embedding = torch.zeros(self.opts.embedding_dim, device=self.opts.device)
         self.default_state = torch.zeros(self.opts.hidden_dim, device=self.opts.device)
-        self.controller = nn.GRUCell(2 * opts.embedding_dim + 2 * opts.term_embedding_dim + 6 + opts.hidden_dim + opts.symbol_dim + 512, opts.hidden_dim)
+
+        self.tac_emb = 0 # don't extend controller if prev tactics not included
+        if self.opts.include_prev_tactics:
+            self.tac_emb = self.opts.tac_embedding # extend controller
+
+        self.controller = nn.GRUCell(2 * opts.embedding_dim + 2 * opts.term_embedding_dim + 6 + opts.hidden_dim + opts.symbol_dim + (2 * self.tac_emb), opts.hidden_dim)
         self.state_decoder = nn.Sequential(nn.Linear(opts.hidden_dim, opts.embedding_dim), nn.Tanh())
         self.context_reader = ContextReader(opts)
         self.context_retriever = ContextRetriever(opts)
@@ -277,8 +282,11 @@ class TacticDecoder(nn.Module):
             r = [torch.cat([environment[i]['embeddings'], local_context[i]['embeddings']], dim=0) for i in indice]
             u_t = self.context_reader(s_tm1, r)
 
-            states = self.controller(torch.cat([a_tm1, goal['embeddings'][indice], u_t, p_t, n_t, seq_embeddings[indice]], dim=1), s_tm1)
-
+            states = None
+            if self.opts.include_prev_tactics:
+                states = self.controller(torch.cat([a_tm1, goal['embeddings'][indice], u_t, p_t, n_t, seq_embeddings[indice]], dim=1), s_tm1)
+            else:
+                states = self.controller(torch.cat([a_tm1, goal['embeddings'][indice], u_t, p_t, n_t], dim=1), s_tm1)
             # store states and expand nodes
             for j, idx in enumerate(indice):
                 stack = frontiers[idx]
@@ -352,8 +360,11 @@ class TacticDecoder(nn.Module):
             r = [torch.cat([environment['embeddings'], local_context['embeddings']], dim=0) for i in indice]
             u_t = self.context_reader(s_tm1, r)
 
-            states = self.controller(torch.cat([a_tm1, goal['embeddings'].expand(len(indice), -1), u_t, p_t, n_t, seq_embeddings.expand(len(indice), -1)], dim=1), s_tm1)
-
+            states = None 
+            if self.opts.include_prev_tactics:
+                states = self.controller(torch.cat([a_tm1, goal['embeddings'].expand(len(indice), -1), u_t, p_t, n_t, seq_embeddings.expand(len(indice), -1)], dim=1), s_tm1)
+            else:
+                states = self.controller(torch.cat([a_tm1, goal['embeddings'].expand(len(indice), -1), u_t, p_t, n_t], dim=1), s_tm1)
             # compute the log likelihood and pick the top candidates
             beam_candidates = []
             for j, idx in enumerate(indice):

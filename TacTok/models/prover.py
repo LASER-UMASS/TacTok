@@ -19,10 +19,11 @@ class Prover(nn.Module):
         self.opts = opts
         self.tactic_decoder = TacticDecoder(CFG(opts.tac_grammar, 'tactic_expr'), opts)
         self.term_encoder = TermEncoder(opts)
-        self.tactic_embedding = Embedding(opts.num_tactics, 256, padding_idx=0)
-        self.tactic_LSTM = LSTM(256, 256, 1, batch_first=True, bidirectional=True)
+        self.tactic_embedding = Embedding(opts.num_tactics, opts.tac_embedding, padding_idx=0)
+        self.tactic_LSTM = LSTM(opts.tac_embedding, opts.tac_embedding, opts.tac_layers, batch_first=True, bidirectional=True)
         self.tac_vocab = pickle.load(open(opts.tac_vocab_file, 'rb'))
         self.cutoff_len = opts.cutoff_len
+        self.include_prev_tactics = opts.include_prev_tactics
         
     def create_tactic_batch(self, tok_seq):
         mod_tok_seq = []
@@ -46,7 +47,7 @@ class Prover(nn.Module):
 
         return torch.tensor(batch, device=self.opts.device), lens
 
-    def embed_terms(self, environment, local_context, goal, tok_seq=None):
+    def embed_terms(self, environment, local_context, goal, tok_seq):
         all_asts = list(chain([env['ast'] for env in chain(*environment)], [context['ast'] for context in chain(*local_context)], goal))
         all_embeddings = self.term_encoder(all_asts)
 
@@ -75,7 +76,7 @@ class Prover(nn.Module):
             j += 1
         goal_embeddings = torch.stack(goal_embeddings)
 
-        if tok_seq:
+        if self.include_prev_tactics:
             tactic_batch, lens = self.create_tactic_batch(tok_seq)
             tactic_embeddings = self.tactic_embedding(tactic_batch)
             X = torch.nn.utils.rnn.pack_padded_sequence(tactic_embeddings, lens, batch_first=True, enforce_sorted=False)
@@ -85,10 +86,10 @@ class Prover(nn.Module):
             return environment_embeddings, context_embeddings, goal_embeddings, tactic_seq_embeddings
 
 
-        return environment_embeddings, context_embeddings, goal_embeddings
+        return environment_embeddings, context_embeddings, goal_embeddings, None
 
 
-    def forward(self, environment, local_context, goal, actions, teacher_forcing, tok_seq=None):
+    def forward(self, environment, local_context, goal, actions, teacher_forcing, tok_seq):
         environment_embeddings, context_embeddings, goal_embeddings, seq_embeddings = \
           self.embed_terms(environment, local_context, goal, tok_seq)
         environment = [{'idents': [v['qualid'] for v in env], 
@@ -104,7 +105,7 @@ class Prover(nn.Module):
         return asts, loss
 
 
-    def beam_search(self, environment, local_context, goal, tok_seq=None):
+    def beam_search(self, environment, local_context, goal, tok_seq):
         environment_embeddings, context_embeddings, goal_embeddings, seq_embeddings = \
           self.embed_terms([environment], [local_context], [goal], [tok_seq])
         environment = {'idents': [v['qualid'] for v in environment],

@@ -19,6 +19,11 @@ def add_common_args(parser: argparse.ArgumentParser):
     parser.add_argument('--path_vocab_file', type=str, default='./names/paths-known-200.pickle')
     parser.add_argument('--cutoff_len', type=int, default=30)
 
+    parser.add_argument('--tac_embedding', type=int, default=256, help='dimension of the tactic encoder embedding')
+    parser.add_argument('--tac_layers', type=int, default=1, help='number of layers in the tactic LSTM')
+
+    parser.add_argument('--no_prev_tactics', action='store_false', dest='include_prev_tactics', help='do not encode prev tactics (become ASTactic)')
+
     # Subwords options
     parser.add_argument('--globals-file', type=str, default='./names/names.pickle')
     parser.add_argument('--locals-file', type=str, default='./names/locals.pickle')
