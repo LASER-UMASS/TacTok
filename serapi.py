@@ -105,8 +105,8 @@ class SerAPI:
         #print(cmd)
         assert '\n' not in cmd
         self.proc.sendline(cmd)
-        log("cmd")
-        log(cmd)
+        # log("cmd")
+        # log(cmd)
         try:
             self.proc.expect(['\(Answer \d+ Ack\)\x00.*\(Answer \d+ Completed\)\x00',
                               '\(Answer \d+ Ack\)\x00.*\(Answer \d+\(CoqExn.*\)\x00'])
@@ -114,7 +114,7 @@ class SerAPI:
             print(self.proc.before)
             raise CoqTimeout
         raw_responses = self.proc.after
-        log(raw_responses)
+        # log(raw_responses)
         #if "Lbl" in raw_responses and "DirPath" in raw_responses:
          #   log(raw_responses)
           #  assert False

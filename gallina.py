@@ -66,7 +66,6 @@ class GallinaTermParser:
 
         # Postprocess: compute height, remove some tokens (variable names), make identifiers explicit
         def postprocess(node, is_construct_child):
-            tokens = []
             children = []
             node.height = 0
             for c in node.children:
@@ -84,20 +83,16 @@ class GallinaTermParser:
                     var_value = SyntaxConfig.nonterminal_value(c.value)
                     node.height = 1
                     children.append(var_value)
-                # Don't erase if part of constructor
                 elif is_construct_child:
-                    tokens.append(node)
-                    children.append(c)
+                   children.append(c)
 
              # Recover constructor names
             if syn_conf.include_constructor_names and SyntaxConfig.is_constructor(node):
-                print(node.pretty())
                 constructor_name = self.serapi.get_constr_name(node)
+                for intnode in node.find_data("int"):
+                    intnode.children = []
                 if constructor_name:
                     children.append(SyntaxConfig.singleton_ident(constructor_name))
-                for node in tokens:
-                     node.children = []
-                print(node.pretty())
             node.children = children
 
         def get_is_construct_child(node, is_construct_child):

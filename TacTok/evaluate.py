@@ -15,7 +15,7 @@ from progressbar import ProgressBar
 from agent import Agent
 from models.prover import Prover
 import pdb
-
+import pickle
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -40,19 +40,49 @@ if __name__ == '__main__':
     parser.add_argument('--num_tactic_candidates', type=int, default=20)
     parser.add_argument('--lens_norm', type=float, default=0.5, help='lengths normalization')
     parser.add_argument('--tac_grammar', type=str, default='tactics.ebnf')
-    parser.add_argument('--term_embedding_dim', type=int, default=256)
+    parser.add_argument('--term_embedding_dim', type=int, default=128)
     parser.add_argument('--size_limit', type=int, default=50)
-    parser.add_argument('--embedding_dim', type=int, default=256, help='dimension of the grammar embeddings')
-    parser.add_argument('--symbol_dim', type=int, default=256, help='dimension of the terminal/nonterminal symbol embeddings')
-    parser.add_argument('--hidden_dim', type=int, default=256, help='dimension of the LSTM controller')
+    parser.add_argument('--embedding_dim', type=int, default=128, help='dimension of the grammar embeddings')
+    parser.add_argument('--symbol_dim', type=int, default=128, help='dimension of the terminal/nonterminal symbol embeddings')
+    parser.add_argument('--hidden_dim', type=int, default=128, help='dimension of the LSTM controller')
     parser.add_argument('--seed', type=int, default=0)
     parser.add_argument('--num_tactics', type=int, default=15025)
     parser.add_argument('--tac_vocab_file', type=str, default='token_vocab.pickle')
     parser.add_argument('--cutoff_len', type=int, default=30)
-
+    parser.add_argument('--def_vocab_file', type=str, default='./names/names-known-200.pickle')
+    parser.add_argument('--local_vocab_file', type=str, default='./names/locals-known-40.pickle')
+    parser.add_argument('--path_vocab_file', type=str, default='./names/paths-known-200.pickle')
+    parser.add_argument('--constructor_vocab_file', type=str, default='./names/constructors-known-200.pickle')
+    parser.add_argument('--no_defs', action='store_false', dest='include_defs', help='do not include the names of definitions and theorems in the model')
+    parser.add_argument('--no_locals', action='store_false', dest='include_locals', help='do not include the names of local variables in the model')
+    parser.add_argument('--no_constructors', action='store_false', dest='include_constructor_names', help='do not include constructor names in the model')
+    parser.add_argument('--no_paths', action='store_false', dest='include_paths', help='do not include fully qualified paths in the model')
+    parser.add_argument('--training', action='store_false', dest='include_serapi', help='training (so do not initialize serapi)')
+    
     parser.add_argument('--debug', action='store_true')
 
     opts = parser.parse_args()
+    # The identifier vocabulary
+    vocab = []
+    if opts.include_defs:
+        vocab += list(pickle.load(open(opts.def_vocab_file, 'rb')).keys())
+    vocab += ['<unk-ident>']
+
+    # The local variable vocabulary
+    if opts.include_locals:
+        vocab += list(pickle.load(open(opts.local_vocab_file, 'rb')).keys())
+        vocab += ['<unk-local>']
+
+    if opts.include_paths:
+        vocab += list(pickle.load(open(opts.path_vocab_file, 'rb')).keys())
+        vocab += ['<unk-path>']
+
+    if opts.include_constructor_names:
+        vocab += list(pickle.load(open(opts.constructor_vocab_file, 'rb')).keys())
+        vocab += ['<unk-constructor>']
+
+    opts.vocab = vocab   
+
     log(opts)
     opts.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     if opts.device.type == 'cpu':
@@ -83,12 +113,12 @@ if __name__ == '__main__':
     if opts.file:
         files = [opts.file]
     elif opts.proj_idx is not None:
-        files = glob(os.path.join(opts.datapath, '%s/**/*.json' % projs_test[opts.proj_idx]), recursive=True)
+        files = glob(os.path.join(opts.datapath, '%s' % projs_test[opts.proj_idx]), recursive=True)
     else:
         files = []
         projs = json.load(open(opts.projs_split))['projs_' + opts.split]
         for proj in projs:
-            files.extend(glob(os.path.join(opts.datapath, '%s/**/*.json' % proj), recursive=True))
+            files.extend(glob(os.path.join(opts.datapath, '%s' % proj), recursive=True))
 
     if opts.file_idx is not None:
         files = [files[opts.file_idx]]
@@ -98,13 +128,16 @@ if __name__ == '__main__':
 
     print(files)
     results = []
-
-    def add_results(file):
+    #bar = ProgressBar(max_value=len(files))
+    def add_results(file, file_data):
         print('file: ', file)
         #print('cuda memory allocated before file: ', torch.cuda.memory_allocated(opts.device), file=sys.stderr)
         results.extend(agent.evaluate(file, opts.proof))
 
-    iter_coq_files(files, add_results, show_progress=True, proj_callback=agent.term_parser.load_project)
+    
+    for f in files:
+        iter_coq_files(f, add_results, show_progress=True, proj_callback=agent.term_parser.load_project)
+        #bar.update(i)
 
     oup_dir = os.path.join(opts.output_dir, opts.eval_id)
     if not os.path.exists(oup_dir):
