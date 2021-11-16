@@ -42,7 +42,7 @@ class Prover(nn.Module):
             idx = max_len - 1 # ex: 29, for len 30
             lens.append(len(item[-idx:]) + 1)
             new_item = [self.tac_vocab['<start>']] + item[-idx:] + [self.tac_vocab['<pad>']]*(max_len-len(item[-idx:])-1)
-            assert len(new_item) == max_len
+            #assert len(new_item) == max_len
             batch.append(new_item)
 
         return torch.tensor(batch, device=self.opts.device), lens
