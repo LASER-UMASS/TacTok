@@ -4,10 +4,11 @@ from lark.tree import Tree
 
 class SyntaxConfig:
 
-    def __init__(self, include_locals=True, include_defs=True, include_paths=True):
+    def __init__(self, include_locals=True, include_defs=True, include_paths=True, merge_vocab=False):
         self.include_locals = include_locals
         self.include_defs = include_defs
         self.include_paths = include_paths
+        self.merge_vocab = merge_vocab
 
     # The node is an identifier
     @staticmethod

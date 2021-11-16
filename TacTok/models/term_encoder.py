@@ -133,7 +133,8 @@ class TermEncoder(nn.Module):
     def __init__(self, opts):
         super().__init__()
         self.opts = opts
-        self.syn_conf = SyntaxConfig(opts.include_locals, opts.include_defs, opts.include_paths)
+        self.syn_conf = SyntaxConfig(opts.include_locals, opts.include_defs, 
+                                     opts.include_paths, opts.merge_vocab)
         self.vocab = opts.vocab + nonterminals
         self.input_gate = InputOutputUpdateGate(opts.term_embedding_dim, self.vocab, opts,
                                                 nonlinear=torch.sigmoid)
@@ -142,11 +143,16 @@ class TermEncoder(nn.Module):
                                                  nonlinear=torch.sigmoid)
         self.update_cell = InputOutputUpdateGate(opts.term_embedding_dim, self.vocab, opts,
                                                  nonlinear=torch.tanh)
-        # Load the vocabulary passed in --globals-file; this defaults to the
-        # globals vocabulary but can be set to the merged one instead.
+        # By default, load the vocabulary passed in --globals-file; this defaults to the
+        # globals vocabulary but can be set to any other by command line.
         occurances = pickle.load(open(opts.globals_file, 'rb'))
-        # If not passed --no-locals, merge in the locals vocabulary.
-        if opts.use_locals_file:
+        
+        # Non-default vocabularies
+        if opts.merge_vocab:
+            # If passed --merge_vocab, use the merged vocabulary instead
+            occurances = pickle.load(open(opts.merged_file, 'rb'))
+        elif opts.use_locals_file:
+            # Otherwise, if not passed --no-locals, merge in the locals vocabulary.
             occurances.update(
               pickle.load(open(opts.locals_file, 'rb')))
         if opts.case_insensitive_idents:
@@ -165,11 +171,12 @@ class TermEncoder(nn.Module):
     def get_vocab_idx(self, node, localnodes, paths):
         data = node.data
         vocab = self.vocab
+        merge_vocab = self.opts.merge_vocab
         if data in vocab:
             return vocab.index(data)
-        elif node in localnodes:
+        elif (node in localnodes) and not merge_vocab:
             return vocab.index('<unk-local>')
-        elif node in paths:
+        elif (node in paths) and not merge_vocab:
             return vocab.index('<unk-path>')
         else:
             return vocab.index('<unk-ident>')
@@ -196,12 +203,9 @@ class TermEncoder(nn.Module):
                            self.name_tokenizer.tokenize_to_idx(
                              node.children[0].data.lower() if self.opts.case_insensitive_idents
                              else node.children[0].data)]
-                          # This checks to see if the node is some sort of
-                          # identifier. Once path stuff is merged, we'll use
-                          # the path function for this.
-                           if (node.data == "constructor_var" or
-                               node.data == "constructor_name" or
-                               node.data == "names__id__t") else
+                          # This checks to see if the node is some sort of identifier,
+                          # including an identifier that makes up part of a path
+                           if (SyntaxConfig.is_local(node) or SyntaxConfig.is_ident(node)) else
                            [])
                         for node in nodes],
                        device=self.opts.device)
