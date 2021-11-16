@@ -27,7 +27,7 @@ def unparse(node):
     if isinstance(node, Token):
         return node.value
     elif node.data == 'int':
-        return node.children[0].value
+        return node.children[0].data
     elif node.data == 'names__id__t':
         return '(Id {})'.format(node.children[0].data)
     elif node.data == 'constructor_dirpath':
