@@ -12,4 +12,4 @@ EVAL_ID=$1
 shift 1
 
 cd TacTok
-python evaluate.py ours ${EVAL_ID} --path runs/${EVAL_ID}/checkpoints/model_003.pth "$@"
+python evaluate.py ours ${EVAL_ID} --path runs/${EVAL_ID}/checkpoints/model_002.pth "$@"
