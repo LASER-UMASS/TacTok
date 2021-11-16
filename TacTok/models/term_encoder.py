@@ -133,7 +133,8 @@ class TermEncoder(nn.Module):
     def __init__(self, opts):
         super().__init__()
         self.opts = opts
-        self.syn_conf = SyntaxConfig(opts.include_locals, opts.include_defs, opts.include_paths)
+        self.syn_conf = SyntaxConfig(opts.include_locals, opts.include_defs, 
+                                     opts.include_paths, opts.merge_vocab)
         self.vocab = opts.vocab + nonterminals
         self.input_gate = InputOutputUpdateGate(opts.term_embedding_dim, self.vocab, opts,
                                                 nonlinear=torch.sigmoid)
