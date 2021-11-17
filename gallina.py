@@ -84,13 +84,13 @@ class GallinaTermParser:
                     node.height = 1
                     children.append(var_value)
                 elif is_construct_child:
-                   children.append(c)
+                    children.append(c)
 
              # Recover constructor names
             if syn_conf.include_constructor_names and SyntaxConfig.is_constructor(node):
                 constructor_name = self.serapi.get_constr_name(node)
-                for intnode in node.find_data('int'):
-                    intnode.children = []
+                for parent in node.iter_subtrees():
+                    parent.children = [c for c in parent.children if not isinstance(c, Token)]
                 if not syn_conf.include_paths:
                     for path_node in node.find_data('constructor_dirpath'):
                         path_node.children = []
