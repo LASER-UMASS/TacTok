@@ -52,7 +52,7 @@ if __name__ == '__main__':
     parser.add_argument('--def_vocab_file', type=str, default='./names/names-known-200.pickle')
     parser.add_argument('--local_vocab_file', type=str, default='./names/locals-known-40.pickle')
     parser.add_argument('--path_vocab_file', type=str, default='./names/paths-known-200.pickle')
-    parser.add_argument('--constructor_vocab_file', type=str, default='./names/constructors-known-200.pickle')
+    parser.add_argument('--constructor_vocab_file', type=str, default='./names/constructors-known-100.pickle')
     parser.add_argument('--no_defs', action='store_false', dest='include_defs', help='do not include the names of definitions and theorems in the model')
     parser.add_argument('--no_locals', action='store_false', dest='include_locals', help='do not include the names of local variables in the model')
     parser.add_argument('--no_constructors', action='store_false', dest='include_constructor_names', help='do not include constructor names in the model')
@@ -113,12 +113,12 @@ if __name__ == '__main__':
     if opts.file:
         files = [opts.file]
     elif opts.proj_idx is not None:
-        files = glob(os.path.join(opts.datapath, '%s' % projs_test[opts.proj_idx]), recursive=True)
+        files = glob(os.path.join(opts.datapath, '%s/**/*.json' % projs_test[opts.proj_idx]), recursive=True)
     else:
         files = []
         projs = json.load(open(opts.projs_split))['projs_' + opts.split]
         for proj in projs:
-            files.extend(glob(os.path.join(opts.datapath, '%s' % proj), recursive=True))
+            files.extend(glob(os.path.join(opts.datapath, '%s/**/*.json' % proj), recursive=True))
 
     if opts.file_idx is not None:
         files = [files[opts.file_idx]]
@@ -129,15 +129,13 @@ if __name__ == '__main__':
     print(files)
     results = []
     #bar = ProgressBar(max_value=len(files))
-    def add_results(file, file_data):
+    def add_results(file):
         print('file: ', file)
         #print('cuda memory allocated before file: ', torch.cuda.memory_allocated(opts.device), file=sys.stderr)
         results.extend(agent.evaluate(file, opts.proof))
 
     
-    for f in files:
-        iter_coq_files(f, add_results, show_progress=True, proj_callback=agent.term_parser.load_project)
-        #bar.update(i)
+    iter_coq_files(files, add_results, show_progress=True, proj_callback=agent.term_parser.load_project, get_data=False)
 
     oup_dir = os.path.join(opts.output_dir, opts.eval_id)
     if not os.path.exists(oup_dir):

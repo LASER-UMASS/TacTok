@@ -2,7 +2,7 @@
 # useful for testing the parser for tactics
 import common
 import sexpdata
-from utils import iter_coq_files
+from utils import iter_coq_root
 import re
 import argparse
 import pdb
@@ -18,7 +18,7 @@ tactics = set()
 def collect_tacs(filename, file_data):
     tactics.update({cmd for cmd, vernac_type, _ in file_data['vernac_cmds'] if vernac_type == 'VernacExtend'})
 
-iter_coq_files(common.data_root, collect_tacs)
+iter_coq_root(common.data_root, collect_tacs)
 
 oup = open(args.output, 'wt')
 for t in tactics:

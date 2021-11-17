@@ -211,11 +211,13 @@ def iter_proofs(data_root, callback, include_synthetic=False, show_progress=Fals
                     subprf_data['env'] = env
                     callback(filename, subprf_data)
 
-    iter_coq_files(data_root, iter_proofs_in_file, show_progress, proj_callback)
+    iter_coq_root(data_root, iter_proofs_in_file, show_progress, proj_callback)
 
-
-def iter_coq_files(data_root, callback, show_progress=False, proj_callback=None):
+def iter_coq_root(data_root, callback, show_progress=False, proj_callback=None):
     coq_files = glob(os.path.join(data_root, '**/*.json'), recursive=True)
+    iter_coq_files(coq_files, callback, show_progress, proj_callback, get_data=True)
+
+def iter_coq_files(coq_files, callback, show_progress=False, proj_callback=None, get_data=True):
     bar = ProgressBar(max_value=len(coq_files))
     projs = defaultdict(list)
     for file in coq_files:
@@ -226,13 +228,15 @@ def iter_coq_files(data_root, callback, show_progress=False, proj_callback=None)
         if proj_callback is not None:
             proj_callback(proj)
         for file in files:
-            with open(file) as f:
-                file_data = json.load(f)
-            callback(file, file_data)
+            if get_data:
+                with open(file) as f:
+                    file_data = json.load(f)
+                callback(file, file_data)
+            else:
+                callback(file)
             if show_progress:
                 bar.update(i)
             i += 1
-
 
 def get_proj(file):
     parts = Path(file).parts
