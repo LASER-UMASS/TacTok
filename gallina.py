@@ -73,13 +73,13 @@ class GallinaTermParser:
                     node.height = max(node.height, c.height + 1)
                     children.append(c)
                 # Don't erase fully-qualified definition & theorem names
-                elif ((syn_conf.include_defs and SyntaxConfig.is_label(node)) or
-                (syn_conf.include_paths and SyntaxConfig.is_path(node))):
+                elif (((syn_conf.include_defs or is_construct_child) and SyntaxConfig.is_label(node)) or
+                ((syn_conf.include_paths or is_construct_child) and SyntaxConfig.is_path(node))):
                     ident_wrapper = SyntaxConfig.singleton_ident(c.value)
                     node.height = 2
                     children.append(ident_wrapper)
                 # Don't erase local variable names
-                elif (syn_conf.include_locals and SyntaxConfig.is_local(node)):
+                elif ((syn_conf.include_locals or is_construct_child) and SyntaxConfig.is_local(node)):
                     var_value = SyntaxConfig.nonterminal_value(c.value)
                     node.height = 1
                     children.append(var_value)
@@ -88,12 +88,18 @@ class GallinaTermParser:
 
              # Recover constructor names
             if syn_conf.include_constructor_names and SyntaxConfig.is_constructor(node):
-                #log(node.pretty())
                 constructor_name = self.serapi.get_constr_name(node)
-                for intnode in node.find_data("int"):
+                for intnode in node.find_data('int'):
                     intnode.children = []
+                if not syn_conf.include_paths:
+                    path_node = next(node.find_data('constructor_dirpath'))
+                    path_node.children = []
+                if not syn_conf.include_defs:
+                    def_node = next(node.find_data('names__label__t'))
+                    def_node.children = []
                 if constructor_name:
                     children.append(SyntaxConfig.singleton_ident(constructor_name))
+
             node.children = children
 
         def get_is_construct_child(node, is_construct_child):
