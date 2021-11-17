@@ -72,7 +72,6 @@ class SerAPIWrapper:
     def get_constr_name(self, construct_node):
         unparsed = unparse(construct_node)
         dir_path = next(construct_node.find_data('constructor_dirpath'))
-        log(dir_path.pretty())
         path = '.'.join(child.children[0].data for child in reversed(dir_path.children))
         if path not in self.added_paths:
             self.added_paths.add(path)
