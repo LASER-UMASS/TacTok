@@ -92,8 +92,8 @@ class GallinaTermParser:
                 for intnode in node.find_data('int'):
                     intnode.children = []
                 if not syn_conf.include_paths:
-                    path_node = next(node.find_data('constructor_dirpath'))
-                    path_node.children = []
+                    for path_node in node.find_data('constructor_dirpath'):
+                        path_node.children = []
                 if not syn_conf.include_defs:
                     def_node = next(node.find_data('names__label__t'))
                     def_node.children = []
@@ -101,6 +101,8 @@ class GallinaTermParser:
                     children.append(SyntaxConfig.singleton_ident(constructor_name))
 
             node.children = children
+            if SyntaxConfig.is_constructor(node):
+                print(node.pretty())
 
         def get_is_construct_child(node, is_construct_child):
             return is_construct_child or SyntaxConfig.is_constructor(node)
