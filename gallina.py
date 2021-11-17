@@ -88,6 +88,7 @@ class GallinaTermParser:
 
              # Recover constructor names
             if syn_conf.include_constructor_names and SyntaxConfig.is_constructor(node):
+                #log(node.pretty())
                 constructor_name = self.serapi.get_constr_name(node)
                 for intnode in node.find_data("int"):
                     intnode.children = []

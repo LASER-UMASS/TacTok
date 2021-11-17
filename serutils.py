@@ -4,6 +4,7 @@ from lark import Token
 from pathlib import Path
 from serapi import SerAPI
 from syntax import SyntaxConfig
+from utils import log
 
 CONSTRUCTOR_NONTERMINALS = {
     'constructor_construct': '(Construct ({} {}))',
@@ -71,6 +72,7 @@ class SerAPIWrapper:
     def get_constr_name(self, construct_node):
         unparsed = unparse(construct_node)
         dir_path = next(construct_node.find_data('constructor_dirpath'))
+        log(dir_path.pretty())
         path = '.'.join(child.children[0].data for child in reversed(dir_path.children))
         if path not in self.added_paths:
             self.added_paths.add(path)
