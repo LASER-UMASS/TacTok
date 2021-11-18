@@ -20,9 +20,10 @@ defs = {}
 local_defs = {}
 paths = {}
 merged = {}
-
-syn_conf = SyntaxConfig(include_locals=True, include_defs=True, include_paths=True)
+constructor_names = {}
+syn_conf = SyntaxConfig(include_locals=True, include_defs=True, include_paths=True, include_constructor_names=True)
 term_parser = GallinaTermParser(syn_conf, caching=True)
+
 sexp_cache = SexpCache('../sexp_cache', readonly=True)
 
 # Preorder traversal makes it easier
@@ -70,6 +71,12 @@ def count(filename, proof_data):
             ident = node.children[0].data
             incr_ident(ident, local_defs)
             incr_ident(ident, merged)
+        elif syn_conf.include_constructor_names and SyntaxConfig.is_constructor(node) and node.children:
+            child = node.children.pop()
+            if SyntaxConfig.is_ident(child):
+                ident = child.children[0].data
+                incr_ident(ident, constructor_names)
+                incr_ident(ident, merged)
 
     traverse_preorder(goal_ast, count_in_goal)
 
@@ -88,6 +95,9 @@ def dump_idents(dirname):
     if syn_conf.include_locals:
         dump(dirname, 'locals.pickle', local_defs)
 
+    if syn_conf.include_constructor_names:
+        dump(dirname, 'constructors.pickle', constructor_names)
+
     if syn_conf.include_paths:
         dump(dirname, 'paths.pickle', paths)
 
@@ -99,18 +109,21 @@ if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser(description='Count occurrences of named datatypes and constants in the data')
     arg_parser.add_argument('--data_root', type=str, default='../data',
                                 help='The folder for CoqGym')
+    arg_parser.add_argument('--coq_projects', type=str, default='../coq_projects',
+                                help='The folder for the coq projects')
     arg_parser.add_argument('--output', type=str, default='./names/',
                                 help='The output file')
     arg_parser.add_argument('--no_defs', action='store_false', dest='include_defs', help='do not include the names of definitions and theorems in the model')
     arg_parser.add_argument('--no_locals', action='store_false', dest='include_locals', help='do not include the names of local variables in the model')
+    arg_parser.add_argument('--no_constructors', action='store_false', dest='include_constructor_names', help='do not include constructor names in the model')
     arg_parser.add_argument('--no_paths', action='store_false', dest='include_paths', help='do not include the paths of definitions and theorems in the model')
     args = arg_parser.parse_args()
     print(args)
     
-    syntax_config = SyntaxConfig(args.include_locals, args.include_defs, args.include_paths)
-    term_parser = GallinaTermParser(syn_conf, caching=True)
+    syn_conf = SyntaxConfig(args.include_locals, args.include_defs, args.include_paths, args.include_constructor_names)
+    term_parser = GallinaTermParser(args.coq_projects, syn_conf, caching=True)
 
-    iter_proofs(args.data_root, count, include_synthetic=False, show_progress=True)
+    iter_proofs(args.data_root, count, include_synthetic=False, show_progress=True, proj_callback=term_parser.load_project)
 
     dump_idents(args.output)
 

@@ -10,7 +10,7 @@ sys.setrecursionlimit(100000)
 sys.path.append(os.path.normpath(os.path.dirname(os.path.realpath(__file__))))
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../')))
 from hashlib import md5
-from utils import log
+from utils import log, iter_coq_files
 from progressbar import ProgressBar
 from agent import Agent
 from models.prover import Prover
@@ -18,13 +18,13 @@ import pdb
 import pickle
 import common_args
 
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     common_args.add_common_args(parser)
     parser.add_argument('method', type=str)
     parser.add_argument('eval_id', type=str)
     parser.add_argument('--datapath', type=str, default='../data')
+    parser.add_argument('--coq_projects', type=str, default='../coq_projects', help='The folder for the coq projects')
     parser.add_argument('--projs_split', type=str, default='../projs_split.json')
     parser.add_argument('--split', choices=['train', 'valid', 'test'], type=str, default='test')
     parser.add_argument('--file', type=str)
@@ -41,10 +41,30 @@ if __name__ == '__main__':
     parser.add_argument('--beam_width', type=int, default=20)  # lots of timeout when >200
     parser.add_argument('--num_tactic_candidates', type=int, default=20)
     parser.add_argument('--lens_norm', type=float, default=0.5, help='lengths normalization')
-
     parser.add_argument('--seed', type=int, default=0)
 
     opts = parser.parse_args()
+    # The identifier vocabulary
+    vocab = []
+    if opts.include_defs:
+        vocab += list(pickle.load(open(opts.def_vocab_file, 'rb')).keys())
+    vocab += ['<unk-ident>']
+
+    # The local variable vocabulary
+    if opts.include_locals:
+        vocab += list(pickle.load(open(opts.local_vocab_file, 'rb')).keys())
+        vocab += ['<unk-local>']
+
+    if opts.include_paths:
+        vocab += list(pickle.load(open(opts.path_vocab_file, 'rb')).keys())
+        vocab += ['<unk-path>']
+
+    if opts.include_constructor_names:
+        vocab += list(pickle.load(open(opts.constructor_vocab_file, 'rb')).keys())
+        vocab += ['<unk-constructor>']
+
+    opts.vocab = vocab   
+
     log(opts)
     opts.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     if opts.device.type == 'cpu':
@@ -56,22 +76,6 @@ if __name__ == '__main__':
     np.random.seed(opts.seed)
     random.seed(opts.seed)
 
-    # The identifier vocabulary
-    vocab = []
-    if opts.include_defs:
-        vocab += list(pickle.load(open(opts.def_vocab_file, 'rb')).keys())
-        vocab += ['<unk-ident>']
-
-	# The local variable vocabulary (same)
-    if opts.include_locals:
-        vocab += list(pickle.load(open(opts.local_vocab_file, 'rb')).keys())
-        vocab += ['<unk-local>']
-
-    if opts.include_paths:
-        vocab += list(pickle.load(open(opts.path_vocab_file, 'rb')).keys())
-        vocab += ['<unk-path>']
-
-    opts.vocab = vocab
     projs_test = ["weak-up-to", "buchberger", "jordan-curve-theorem", "dblib", "disel", "zchinese", "zfc", "dep-map", "chinese", "UnifySL", "hoare-tut", "huffman", "PolTac", "angles", "coq-procrastination", "coq-library-undecidability", "tree-automata", "coquelicot", "fermat4", "demos", "coqoban", "goedel", "verdi-raft", "verdi", "zorns-lemma", "coqrel", "fundamental-arithmetics"]
 
     if 'ours' in opts.method:
@@ -107,12 +111,14 @@ if __name__ == '__main__':
 
     print(files)
     results = []
-    bar = ProgressBar(max_value=len(files))
-    for i, f in enumerate(files):
-        print('file: ', f)
+    #bar = ProgressBar(max_value=len(files))
+    def add_results(file):
+        print('file: ', file)
         #print('cuda memory allocated before file: ', torch.cuda.memory_allocated(opts.device), file=sys.stderr)
-        results.extend(agent.evaluate(f, opts.proof))
-        bar.update(i)
+        results.extend(agent.evaluate(file, opts.proof))
+
+    
+    iter_coq_files(files, add_results, show_progress=True, proj_callback=agent.term_parser.load_project, get_data=False)
 
     oup_dir = os.path.join(opts.output_dir, opts.eval_id)
     if not os.path.exists(oup_dir):

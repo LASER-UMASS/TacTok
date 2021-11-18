@@ -12,6 +12,7 @@ from gallina import traverse_postorder
 import pdb
 import pickle
 from .bpe import LongestMatchTokenizer, get_bpe_vocab
+from utils import log
 
 nonterminals = [
     'constr__constr',
@@ -133,8 +134,8 @@ class TermEncoder(nn.Module):
     def __init__(self, opts):
         super().__init__()
         self.opts = opts
-        self.syn_conf = SyntaxConfig(opts.include_locals, opts.include_defs, 
-                                     opts.include_paths, opts.merge_vocab)
+        self.syn_conf = SyntaxConfig(opts.include_locals, opts.include_defs, opts.include_paths,
+                                     opts.include_constructor_names, opts.merge_vocab)
         self.vocab = opts.vocab + nonterminals
         self.input_gate = InputOutputUpdateGate(opts.term_embedding_dim, self.vocab, opts,
                                                 nonlinear=torch.sigmoid)
@@ -168,7 +169,7 @@ class TermEncoder(nn.Module):
         self.name_encoder = nn.RNN(self.name_tokenizer.vocab_size + 1,
                                    opts.ident_vec_size, batch_first=True)
 
-    def get_vocab_idx(self, node, localnodes, paths):
+    def get_vocab_idx(self, node, localnodes, paths, cnames):
         data = node.data
         vocab = self.vocab
         merge_vocab = self.opts.merge_vocab
@@ -178,6 +179,8 @@ class TermEncoder(nn.Module):
             return vocab.index('<unk-local>')
         elif (node in paths) and not merge_vocab:
             return vocab.index('<unk-path>')
+        elif (node in cnames) and not merge_vocab:
+            return vocab.index('<unk-constructor>')
         else:
             return vocab.index('<unk-ident>')
 
@@ -226,7 +229,8 @@ class TermEncoder(nn.Module):
         height2nodes = defaultdict(set)
         localnodes = set()
         paths = set()
-
+        cnames = set()
+        
         def get_metadata(node):
             height2nodes[node.height].add(node)
             if self.syn_conf.include_paths and SyntaxConfig.is_path(node):
@@ -236,6 +240,10 @@ class TermEncoder(nn.Module):
             if self.syn_conf.include_locals and SyntaxConfig.is_local(node):
                 assert len(node.children) > 0
                 localnodes.update(node.children)
+            if self.syn_conf.include_constructor_names and SyntaxConfig.is_constructor(node):
+                child = node.children[-1]
+                if SyntaxConfig.is_ident(child):
+                    cnames.add(child.children[0])
 
         for ast in term_asts:
             traverse_postorder(ast, get_metadata)
@@ -252,7 +260,7 @@ class TermEncoder(nn.Module):
             c_remains = []
             x0 = torch.zeros(len(nodes_at_height), len(self.vocab),
                              device=self.opts.device) \
-                      .scatter_(1, torch.tensor([self.get_vocab_idx(node, localnodes, paths) for node in nodes_at_height],
+                      .scatter_(1, torch.tensor([self.get_vocab_idx(node, localnodes, paths, cnames) for node in nodes_at_height],
                                                 device=self.opts.device).unsqueeze(1), 1.0)
 
             x1 = self.encode_identifiers(nodes_at_height)

@@ -21,6 +21,7 @@ def parse_args():
     parser.add_argument('--include_synthetic', action='store_true')
     parser.add_argument('--exp_id', type=str)
     parser.add_argument('--datapath', type=str, default='processed/proof_steps')
+    parser.add_argument('--coq_projects', type=str, default='../coq_projects', help='The folder for the coq projects')
     parser.add_argument('--projs_split', type=str, default='../projs_split.json')
     parser.add_argument('--num_epochs', type=int, default=4)
     parser.add_argument('--resume', type=str, help='the model checkpoint to resume')
@@ -69,6 +70,14 @@ def parse_args():
         vocab += list(pickle.load(open(opts.path_vocab_file, 'rb')).keys())
         if not opts.merge_vocab:
             vocab += ['<unk-path>']
+
+    if opts.include_paths:
+        vocab += list(pickle.load(open(opts.path_vocab_file, 'rb')).keys())
+        vocab += ['<unk-path>']
+
+    if opts.include_constructor_names:
+        vocab += list(pickle.load(open(opts.constructor_vocab_file, 'rb')).keys())
+        vocab += ['<unk-constructor>']
 
     opts.vocab = vocab
 

@@ -9,7 +9,8 @@ def add_common_args(parser: argparse.ArgumentParser):
     parser.add_argument('--no_defs', action='store_false', dest='include_defs', help='do not include the names of definitions and theorems in the model')
     parser.add_argument('--no_locals', action='store_false', dest='include_locals', help='do not include the names of local variables in the model')
     parser.add_argument('--no_paths', action='store_false', dest='include_paths', help='do not include fully qualified paths in the model')
-
+    parser.add_argument('--no_constructors', action='store_false', dest='include_constructor_names', help='do not include constructor names in the model') 
+    parser.add_argument('--training', action='store_false', dest='include_serapi', help='training (so do not initialize serapi)')
     # term encoder
     parser.add_argument('--term_embedding_dim', type=int, default=128)
     parser.add_argument('--num_tactics', type=int, default=15025)
