@@ -60,7 +60,7 @@ if __name__ == '__main__':
     vocab = []
     if opts.include_defs:
         vocab += list(pickle.load(open(opts.def_vocab_file, 'rb')).keys())
-        vocab += ['<unk-ident>']
+    vocab += ['<unk-ident>']
 
 	# The local variable vocabulary (same)
     if opts.include_locals:
