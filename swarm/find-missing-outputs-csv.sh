@@ -8,6 +8,10 @@ shopt -s nullglob
 TT_DIR=$HOME/work/TacTok
 
 OUTPUT_DIR=$1
+if [[ ! -d ${OUTPUT_DIR} ]]; then
+  >&2 echo "Output directory doesn't exist!"
+  exit 1
+fi
 NUM_PROJS=$(jq ".projs_test[]" ${TT_DIR}/projs_split.json | wc -l)
 for proj_idx in $(eval echo "{0..$(($NUM_PROJS - 1))}"); do
   if [[ -f ${OUTPUT_DIR}/results_${proj_idx}.json ]] ; then
