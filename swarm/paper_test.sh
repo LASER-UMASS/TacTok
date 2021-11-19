@@ -8,8 +8,8 @@ FLAGS_DEFAULT="--no-locals-file --bpe-merges=4096"
 run-experiment () (
     EVAL_ID=$1
     shift 1
-    rsync -avzz ${REMOTE_TT_DIR}/TacTok/runs/checkpoints/${EVAL_ID} \
-          ${TT_DIR}/TacTok/runs/checkpoints/
+    rsync -avzz ${REMOTE_TT_DIR}/TacTok/runs/${EVAL_ID} \
+          ${TT_DIR}/TacTok/runs/
     ${TT_DIR}/swarm/evaluate-test.sh ${EVAL_ID} ${FLAGS_DEFAULT} "$@"
 )
 
