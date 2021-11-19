@@ -65,7 +65,7 @@ run-experiment paper-tok+locals+bpe \
 
 
 ## MERGED IDENTS ##
-run-experiment paper-merged \
+run-experiment paper-tok+merged \
                --merge_vocab
 
 ## GLOBAL VOCAB SIZE ##
