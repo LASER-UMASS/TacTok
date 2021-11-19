@@ -189,6 +189,13 @@ class TermEncoder(nn.Module):
         else:
             return seq
 
+    def should_bpe_encode(self, node):
+        if SyntaxConfig.is_local(node) and self.opts.include_locals:
+            return True
+        if SyntaxConfig.is_ident(node) and self.opts.include_defs:
+            return True
+        return False
+
     def encode_identifiers(self, nodes):
         encoder_initial_hidden = torch.zeros(1, len(nodes),
                                              self.opts.ident_vec_size,
@@ -206,7 +213,7 @@ class TermEncoder(nn.Module):
                              else node.children[0].data)]
                           # This checks to see if the node is some sort of identifier,
                           # including an identifier that makes up part of a path
-                           if (SyntaxConfig.is_local(node) or SyntaxConfig.is_ident(node)) else
+                           if self.should_bpe_encode(node) else
                            [])
                         for node in nodes],
                        device=self.opts.device)
