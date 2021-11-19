@@ -5,7 +5,7 @@ REMOTE_TT_DIR=gypsum.cs.umass.edu:TacTok
 
 FLAGS_DEFAULT="--no-locals-file --bpe-merges=4096"
 
-function run-experiment (
+run-experiment () (
     EVAL_ID=$1
     shift 1
     rsync -avzz ${REMOTE_TT_DIR}/TacTok/runs/checkpoints/${EVAL_ID} \
