@@ -14,7 +14,13 @@ if [ -d $DEST ]; then
         [yY][eE][sS]|[yY])
         rm -r "$DEST" ;;
         *)
-        echo "Aborting..." && exit 1 ;;
+        read -r -p "Continue from existing run? [y/N] " input
+        case $input in 
+            [yY][eE][sS]|[yY])
+            $TT_DIR/swarm/rerun-missing-files.sh ${EVAL_ID} "$@" ;;
+            *)
+            echo "Aborting..." && exit 1 ;;
+        esac ;;
     esac
 fi
 
