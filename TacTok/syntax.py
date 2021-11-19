@@ -4,10 +4,12 @@ from lark.tree import Tree
 
 class SyntaxConfig:
 
-    def __init__(self, include_locals=True, include_defs=True, include_paths=True, merge_vocab=False):
+    def __init__(self, include_locals=True, include_defs=True, include_paths=True,
+                 include_constructor_names=True, merge_vocab=False):
         self.include_locals = include_locals
         self.include_defs = include_defs
         self.include_paths = include_paths
+        self.include_constructor_names = include_constructor_names
         self.merge_vocab = merge_vocab
 
     # The node is an identifier
@@ -40,6 +42,11 @@ class SyntaxConfig:
     def is_label(node):
         return (node.data == 'names__label__t')
 
+    # The node is a constructor
+    @staticmethod
+    def is_constructor(node):
+        return (node.data == 'constructor_construct')
+
     # Make a new value as a nonterminal with an empty list of terminals
     @staticmethod
     def nonterminal_value(value):
@@ -54,4 +61,3 @@ class SyntaxConfig:
         ident_wrapper = Tree('names__id__t', [value_tree])
         ident_wrapper.height = 1
         return ident_wrapper
-

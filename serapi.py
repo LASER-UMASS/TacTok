@@ -105,6 +105,8 @@ class SerAPI:
         #print(cmd)
         assert '\n' not in cmd
         self.proc.sendline(cmd)
+        # log("cmd")
+        # log(cmd)
         try:
             self.proc.expect(['\(Answer \d+ Ack\)\x00.*\(Answer \d+ Completed\)\x00',
                               '\(Answer \d+ Ack\)\x00.*\(Answer \d+\(CoqExn.*\)\x00'])
@@ -112,7 +114,10 @@ class SerAPI:
             print(self.proc.before)
             raise CoqTimeout
         raw_responses = self.proc.after
-        #print(raw_responses)
+        # log(raw_responses)
+        #if "Lbl" in raw_responses and "DirPath" in raw_responses:
+         #   log(raw_responses)
+          #  assert False
         ack_num = int(re.search(r'^\(Answer (?P<num>\d+)', raw_responses)['num'])
         for num in re.findall(r'(?<=\(Answer) \d+', raw_responses):
             assert int(num) == ack_num

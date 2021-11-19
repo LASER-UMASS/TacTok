@@ -5,6 +5,7 @@ from tac_grammar import CFG, TreeBuilder, NonterminalNode, TerminalNode
 import sys
 sys.setrecursionlimit(100000)
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../')))
+from functools import partial
 from syntax import SyntaxConfig
 from gallina import GallinaTermParser
 from lark.exceptions import UnexpectedCharacters, ParseError
@@ -12,13 +13,13 @@ from utils import iter_proofs, SexpCache
 import argparse
 from hashlib import md5
 from agent import filter_env
-import pdb
 
-syn_conf = SyntaxConfig(include_locals=True, include_defs=True, include_paths=True)
+syn_conf = SyntaxConfig(include_locals=True, include_defs=True, include_paths=True, include_constructor_names=True)
 term_parser = GallinaTermParser(syn_conf, caching=True)
+
 sexp_cache = SexpCache('../sexp_cache', readonly=True)
 
-def parse_goal(g):
+def parse_goal(term_parser, g):
     goal = {'id': g['id'], 'text': g['type'], 'ast': term_parser.parse(sexp_cache[g['sexp']])}
     local_context = []
     for i, h in enumerate(g['hypotheses']):
@@ -48,7 +49,7 @@ proof_steps = {'train': [], 'valid': [], 'test': []}
 
 num_discarded = 0
 
-def process_proof(filename, proof_data):
+def process_proof(term_parser, filename, proof_data):
     if 'entry_cmds' in proof_data:
         is_synthetic = True
     else:
@@ -83,7 +84,7 @@ def process_proof(filename, proof_data):
             num_discarded += 1
             continue
         goal_id = step['goal_ids']['fg'][0]
-        local_context, goal = parse_goal(proof_data['goals'][str(goal_id)])
+        local_context, goal = parse_goal(term_parser, proof_data['goals'][str(goal_id)])
         # tactic
         tac_str = step['command'][0][:-1]
         try:
@@ -110,19 +111,24 @@ if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser(description='Extract the proof steps from CoqGym for trainig ASTactic via supervised learning')
     arg_parser.add_argument('--no_defs', action='store_false', dest='include_defs', help='do not include the names of definitions and theorems in the model')
     arg_parser.add_argument('--no_locals', action='store_false', dest='include_locals', help='do not include the names of local variables in the model')
+    arg_parser.add_argument('--no_constructors', action='store_false', dest='include_constructor_names',
+                        help='do not include constructor names in the model')
     arg_parser.add_argument('--no_paths', action='store_false', dest='include_paths', help='do not include the paths of definitions and theorems in the model')
     arg_parser.add_argument('--data_root', type=str, default='../data',
                                 help='The folder for CoqGym')
+    arg_parser.add_argument('--coq_projects', type=str, default='../coq_projects',
+                                help='The folder for the coq projects')
     arg_parser.add_argument('--output', type=str, default='./proof_steps/',
                                 help='The output file')
     arg_parser.add_argument('--filter', type=str, help='filter the proofs')
     args = arg_parser.parse_args()
     print(args)
     
-    syn_conf = SyntaxConfig(args.include_locals, args.include_defs, args.include_paths)
-    term_parser = GallinaTermParser(syn_conf, caching=True)
+    syn_conf = SyntaxConfig(args.include_locals, args.include_defs, args.include_paths, arg.include_constructor_names)
+    term_parser = GallinaTermParser(syn_conf, caching=True, use_serapi=True)
 
-    iter_proofs(args.data_root, process_proof, include_synthetic=False, show_progress=True)
+    iter_proofs(args.data_root, partial(process_proof, term_parser), include_synthetic=False,
+                show_progress=True, proj_callback=term_parser.load_project)
 
     for split in ['train', 'valid']:
         for i, step in enumerate(proof_steps[split]):
