@@ -3,7 +3,7 @@
 TT_DIR=$HOME/work/TacTok
 REMOTE_TT_DIR=gypsum.cs.umass.edu:TacTok
 
-FLAGS_DEFAULT="--no-locals-file --max-ident-chunks=4 --bpe-merges=4096"
+FLAGS_DEFAULT="--no-locals-file --bpe-merges=4096"
 
 function run-experiment (
     EVAL_ID=$1
