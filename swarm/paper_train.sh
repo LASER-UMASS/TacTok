@@ -53,7 +53,7 @@ train-experiment titanx-long paper-tok+paths+bpe \
 
 # Tok + Constructors + BPE
 train-experiment titanx-long paper-tok+cons+bpe \
-      --max-ident-chunks=0 --no_defs --no_locals --no_paths
+       --no_defs --no_locals --no_paths
 
 # Tok + Globals
 train-experiment titanx-long paper-tok+globals+bpe \

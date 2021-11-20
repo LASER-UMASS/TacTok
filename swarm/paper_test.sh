@@ -53,7 +53,7 @@ run-experiment paper-tok+paths+bpe \
 
 # Tok + Constructors + BPE
 run-experiment paper-tok+cons+bpe \
-               --max-ident-chunks=0 --no_defs --no_locals --no_paths
+               --no_defs --no_locals --no_paths
 
 # Tok + Globals
 run-experiment paper-tok+globals+bpe \
