@@ -4,11 +4,12 @@ TT_DIR=$HOME/TacTok
 
 FLAGS_DEFAULT="--num-epochs=3 --no-locals-file --max-ident-chunks=4 --bpe-merges=4096"
 
-function train-experiment (
+train-experiment () (
     QUEUE=$1
     EVAL_ID=$2
     shift 2
-    sbatch -p $QUEUE --gres=gpu:1 -J $EVAL_ID $TT_DIR/swarm/basic_train.sh \
+    sbatch -p $QUEUE --gres=gpu:1 --mem=8000 --output=$TT_DIR/output/paper-train/$EVAL_ID \
+           -J $EVAL_ID $TT_DIR/swarm/basic_train.sh \
            --exp_id=$EVAL_ID ${FLAGS_DEFAULT} "$@"
 )
 
