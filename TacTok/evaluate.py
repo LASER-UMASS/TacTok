@@ -56,7 +56,7 @@ if __name__ == '__main__':
         if not opts.merge_vocab:
             vocab += ['<unk-local>']
 
-    if opts.include_paths and not opts.merge_vocab:
+    if opts.include_paths:
         vocab += list(pickle.load(open(opts.path_vocab_file, 'rb')).keys())
         if not opts.merge_vocab:
             vocab += ['<unk-path>']

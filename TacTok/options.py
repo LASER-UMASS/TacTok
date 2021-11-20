@@ -66,9 +66,10 @@ def parse_args():
             vocab += ['<unk-local>']
 
     # The path vocabulary
-    if opts.include_paths and not opts.merge_vocab:
+    if opts.include_paths:
         vocab += list(pickle.load(open(opts.path_vocab_file, 'rb')).keys())
-        vocab += ['<unk-path>']
+        if not opts.merge_vocab:
+            vocab += ['<unk-path>']
 
     if opts.include_constructor_names:
         vocab += list(pickle.load(open(opts.constructor_vocab_file, 'rb')).keys())
