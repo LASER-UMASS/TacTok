@@ -24,8 +24,8 @@ The following are the dependencies and directions to install CoqGym:
 
 1. Create an OPAM switch for OCaml 4.07.1+flambda: `opam switch create 4.07.1+flambda && eval $(opam env)`
 2. Upgrade the installed OPAM packages (optional): `opam upgrade && eval $(opam env)`
-3. Clone the repository: `git clone https://github.com/princeton-vl/CoqGym`
-4. Install Coq, SerAPI and CoqHammer: `cd CoqGym && source install.sh`
+3. Clone the repository
+4. Install Coq, SerAPI and CoqHammer: `cd TacTok && source install.sh`
 5. Build the Coq projects (can take a while): `cd coq_projects && make && cd ..`
 6. Create and activate the conda environment: `conda env create -f coq_gym.yml && conda activate coq_gym`
 
