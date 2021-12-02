@@ -2,6 +2,7 @@ import os
 import json
 import pickle
 import sys
+import functools
 sys.setrecursionlimit(100000)
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../')))
 from syntax import SyntaxConfig
@@ -21,8 +22,6 @@ local_defs = {}
 paths = {}
 merged = {}
 constructor_names = {}
-syn_conf = SyntaxConfig(include_locals=True, include_defs=True, include_paths=True, include_constructor_names=True)
-term_parser = GallinaTermParser(syn_conf, caching=True)
 
 sexp_cache = SexpCache('../sexp_cache', readonly=True)
 
@@ -42,7 +41,7 @@ def incr_ident(ident, idents):
     else:
         idents[ident] += 1
 
-def count(filename, proof_data):
+def count(args, term_parser, filename, proof_data):
     proj = filename.split(os.path.sep)[2]
     if not proj in projs_split['projs_train']:
         return
@@ -55,23 +54,24 @@ def count(filename, proof_data):
     def count_in_goal(node):
         if SyntaxConfig.is_path(node):
             # paths
-            if syn_conf.include_paths:
+            if args.include_paths:
                 for c in node.children:
                     ident = c.children[0].data
                     incr_ident(ident, paths)
                     incr_ident(ident, merged)
-            node.children = [] # don't treat these like global definitions
-        elif syn_conf.include_defs and SyntaxConfig.is_ident(node):
+            if not args.paths_in_defs:
+                node.children = [] # don't treat these like global definitions
+        elif args.include_defs and SyntaxConfig.is_ident(node):
             # global definitions and theorems
             ident = node.children[0].data
             incr_ident(ident, defs)
             incr_ident(ident, merged)
-        elif syn_conf.include_locals and SyntaxConfig.is_local(node):
+        elif args.include_locals and SyntaxConfig.is_local(node):
             # local variables
             ident = node.children[0].data
             incr_ident(ident, local_defs)
             incr_ident(ident, merged)
-        elif syn_conf.include_constructor_names and SyntaxConfig.is_constructor(node) and node.children:
+        elif args.include_constructor_names and SyntaxConfig.is_constructor(node) and node.children:
             child = node.children.pop()
             if SyntaxConfig.is_ident(child):
                 ident = child.children[0].data
@@ -85,20 +85,20 @@ def dump(dirname, filename, idents):
     pickle.dump(idents, names_file)
     names_file.close()
 
-def dump_idents(dirname):
+def dump_idents(args, dirname):
     if not os.path.exists(dirname):
         os.makedirs(dirname)
 
-    if syn_conf.include_defs:
+    if args.include_defs:
         dump(dirname, 'names.pickle', defs)
 
-    if syn_conf.include_locals:
+    if args.include_locals:
         dump(dirname, 'locals.pickle', local_defs)
 
-    if syn_conf.include_constructor_names:
+    if args.include_constructor_names:
         dump(dirname, 'constructors.pickle', constructor_names)
 
-    if syn_conf.include_paths:
+    if args.include_paths:
         dump(dirname, 'paths.pickle', paths)
 
     dump(dirname, 'merged.pickle', merged)
@@ -117,13 +117,14 @@ if __name__ == '__main__':
     arg_parser.add_argument('--no_locals', action='store_false', dest='include_locals', help='do not include the names of local variables in the model')
     arg_parser.add_argument('--no_constructors', action='store_false', dest='include_constructor_names', help='do not include constructor names in the model')
     arg_parser.add_argument('--no_paths', action='store_false', dest='include_paths', help='do not include the paths of definitions and theorems in the model')
+    arg_parser.add_argument('--paths_in_defs', action='store_true', help='include path components in the global definitions vocabulary')
     args = arg_parser.parse_args()
     print(args)
     
     syn_conf = SyntaxConfig(args.include_locals, args.include_defs, args.include_paths, args.include_constructor_names)
     term_parser = GallinaTermParser(args.coq_projects, syn_conf, caching=True)
 
-    iter_proofs(args.data_root, count, include_synthetic=False, show_progress=True, proj_callback=term_parser.load_project)
+    iter_proofs(args.data_root, functools.partial(count, args, term_parser), include_synthetic=False, show_progress=True, proj_callback=term_parser.load_project)
 
-    dump_idents(args.output)
+    dump_idents(args, args.output)
 
