@@ -211,22 +211,12 @@ def iter_proofs_in_file(callback, filename, file_data, include_synthetic=False):
                 callback(filename, subprf_data)
 
 def iter_proofs(data_root, callback, include_synthetic=False, show_progress=False, proj_callback=None):
-    def iter_proofs_in_file(filename, file_data):
-        env = {'constants': [], 'inductives': []}
-        for proof_data in file_data['proofs']:
-            env = update_env(env, proof_data['env_delta'])
-            del proof_data['env_delta']
-            proof_data['env'] = env
-            callback(filename, proof_data)
-            if include_synthetic and 'synthetic_proofs' in file_data and proof_data['name'] in file_data['synthetic_proofs']:
-                for subprf_data in file_data['synthetic_proofs'][proof_data['name']]:
-                    subprf_data['env'] = env
-                    callback(filename, subprf_data)
+    iter_coq_root(data_root, functools.partial(iter_proofs_in_file, callback), include_synthetic, show_progress, proj_callback)
 
-    iter_coq_root(data_root, iter_proofs_in_file, show_progress, proj_callback)
-
-def iter_coq_root(data_root, callback, show_progress=False, proj_callback=None):
+def iter_coq_root(data_root, callback, include_synthetic=False, show_progress=False, proj_callback=None):
     coq_files = glob(os.path.join(data_root, '**/*.json'), recursive=True)
+    iter_coq_files(coq_files, callback,
+                   show_progress=show_progress, proj_callback=proj_callback)
 
 def iter_coq_files(coq_files, callback, show_progress=False, proj_callback=None, get_data=True):
     bar = ProgressBar(max_value=len(coq_files))
