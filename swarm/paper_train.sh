@@ -14,7 +14,7 @@ train-experiment() (
            --mem=8000 \
            --output=$TT_DIR/output/paper-train/${EVAL_ID}.out \
            $TT_DIR/swarm/basic_train.sh \
-           --exp_id=$EVAL_ID ${FLAGS_DEFAULT} --training "$@"
+           $EVAL_ID ${FLAGS_DEFAULT} --training "$@"
 )
 
 ## MAIN EXPERIMENT ##
