@@ -12,7 +12,7 @@ while [ -d $TT_DIR/TacTok/runs/${EVAL_ID}-${TAG} ]; do
     ((NEXT_IDX++))
 done
 OUTDIR=$TT_DIR/TacTok/runs/${EVAL_ID}-${TAG}
-mkdir -p ${OUTDIR}
+mkdir -p ${OUTDIR}/checkpoints
 git log -20 > ${OUTDIR}/glog.txt
 git status > ${OUTDIR}/gstatus.txt
 git diff > ${OUTDIR}/gdiff.txt
