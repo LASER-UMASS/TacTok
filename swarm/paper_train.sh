@@ -11,7 +11,7 @@ train-experiment() (
     EVAL_ID=$2
     shift 2
     sbatch -p $QUEUE --gres=gpu:1 -J $EVAL_ID \
-           --mem=8000 \
+           --mem=16000 \
            --output=$TT_DIR/output/paper-train/${EVAL_ID}.out \
            $TT_DIR/swarm/basic_train.sh \
            $EVAL_ID ${FLAGS_DEFAULT} --training "$@"
