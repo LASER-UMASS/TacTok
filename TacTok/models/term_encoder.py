@@ -135,6 +135,7 @@ class TermEncoder(nn.Module):
         self.opts = opts
         self.syn_conf = SyntaxConfig(opts.include_locals, opts.include_defs, opts.include_paths)
         self.vocab = opts.vocab + nonterminals
+        
         self.input_gate = InputOutputUpdateGate(opts.term_embedding_dim, self.vocab, opts,
                                                 nonlinear=torch.sigmoid)
         self.forget_gates = ForgetGates(opts.term_embedding_dim, self.vocab, opts)
@@ -184,7 +185,8 @@ class TermEncoder(nn.Module):
 
     def encode_identifiers(self, nodes):
         encoder_initial_hidden = torch.zeros(1, len(nodes),
-                                             self.opts.ident_vec_size)
+                                             self.opts.ident_vec_size,
+                                             device=self.opts.device)
         node_identifier_chunks = \
           torch.tensor([self.normalize_length(
                           self.opts.max_ident_chunks,
