@@ -4,7 +4,7 @@ TT_DIR=$HOME/TacTok
 EVAL_ID=$1
 shift 1
 
-COMMIT=$(git log -1 | head -n 1 | awk -F' ' '{print $2}')
+COMMIT=$(git rev-parse HEAD --short)
 TAG=$COMMIT
 NEXT_IDX=1
 while [ -d $TT_DIR/TacTok/runs/${EVAL_ID}-${TAG} ]; do
