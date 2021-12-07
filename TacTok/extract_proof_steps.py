@@ -14,9 +14,6 @@ import argparse
 from hashlib import md5
 from agent import filter_env
 
-syn_conf = SyntaxConfig(include_locals=True, include_defs=True, include_paths=True, include_constructor_names=True)
-term_parser = GallinaTermParser(syn_conf, caching=True)
-
 sexp_cache = SexpCache('../sexp_cache', readonly=True)
 
 def parse_goal(term_parser, g):
@@ -124,8 +121,8 @@ if __name__ == '__main__':
     args = arg_parser.parse_args()
     print(args)
     
-    syn_conf = SyntaxConfig(args.include_locals, args.include_defs, args.include_paths, arg.include_constructor_names)
-    term_parser = GallinaTermParser(syn_conf, caching=True, use_serapi=True)
+    syn_conf = SyntaxConfig(args.include_locals, args.include_defs, args.include_paths, args.include_constructor_names)
+    term_parser = GallinaTermParser(args.coq_projects, syn_conf, caching=True, use_serapi=True)
 
     iter_proofs(args.data_root, partial(process_proof, term_parser), include_synthetic=False,
                 show_progress=True, proj_callback=term_parser.load_project)
