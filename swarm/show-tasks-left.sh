@@ -9,12 +9,20 @@ while
         TOTAL=0
         for i in "$@"; do
             NUM_LEFT=$(squeue $SFLAGS -n $i-evaluate-file,$i-evaluate-proof | wc -l)
+            EXIT=$?
+            if [[ $EXIT -ne 0 ]]; then
+                continue 
+            fi
             ((TOTAL+=$NUM_LEFT))
             echo -n '  '$NUM_LEFT'  '
         done
         echo -n $'\r'
     else
         NUM_LEFT=$(squeue $SFLAGS | wc -l)
+        EXIT=$?
+        if [[ $EXIT -ne 0 ]]; then
+           continue 
+        fi
         TOTAL=$NUM_LEFT
         echo -n $'\r'${NUM_LEFT}'  '
     fi
