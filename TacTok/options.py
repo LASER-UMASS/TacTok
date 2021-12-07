@@ -30,7 +30,7 @@ def parse_args():
     parser.add_argument('--smoke', action='store_true')
     parser.add_argument('--seed', type=int, default=0)
     parser.add_argument('--filter', type=str)
-    parser.add_argument('--debug', action='store_true')
+    parser.add_argument('--num_steps', type=int, default=None, help='truncate the number of samples to a set count')
 
     # optimization
     parser.add_argument('--optimizer', type=str, default='RMSprop')

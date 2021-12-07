@@ -25,6 +25,15 @@ class ProofStepsData(Dataset):
         elif split == 'train_valid':
             self.proof_steps = glob(os.path.join(opts.datapath, 'train/*.pickle')) + \
                                glob(os.path.join(opts.datapath, 'valid/*.pickle'))
+
+        if opts.num_steps is not None:
+           print(f"num_steps is {opts.num_steps}")
+           print(f"steps before: {len(self)}, {len(self.proof_steps)}")
+           self.proof_steps = self.proof_steps[:opts.num_steps]
+           print(f"steps after: {len(self)}, {len(self.proof_steps)}")
+        else:
+           print("num_steps is None")
+
         random.shuffle(self.proof_steps)
         print('%d proof steps in %s' % (len(self), split))
 
