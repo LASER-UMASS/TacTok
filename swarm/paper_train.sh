@@ -2,7 +2,7 @@
 
 TT_DIR=$HOME/TacTok
 
-FLAGS_DEFAULT="--num_epochs=3 --no-locals-file --max-ident-chunks=4 --bpe-merges=4096"
+FLAGS_DEFAULT="--num_epochs=3 --no-locals-file --max-ident-chunks=4 --bpe-merges=4096 --datapath=processed-no-cons/proof_steps"
 
 mkdir -p $TT_DIR/output/paper-train
 
