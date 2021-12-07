@@ -90,4 +90,4 @@ class SerAPIWrapper:
             return
         if name and name.startswith('@'):
             name = name[1:]
-        return name
+        return name.rsplit('.', 1)[-1]
