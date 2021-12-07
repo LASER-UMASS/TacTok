@@ -1,6 +1,7 @@
 import torch
 import torch.nn.functional as F
 import os
+from syntax import SyntaxConfig
 from gallina import GallinaTermParser
 from utils import SexpCache, log
 from eval_env import FileEnv
@@ -102,7 +103,8 @@ class Agent:
       self.optimizer = optimizer
       self.dataloader = dataloader
       self.opts = opts
-      self.term_parser = GallinaTermParser(caching=True, include_locals=self.opts.include_locals, include_defs=self.opts.include_defs)
+      self.syn_conf = SyntaxConfig(include_locals=opts.include_locals, include_defs=opts.include_defs)
+      self.term_parser = GallinaTermParser(self.syn_conf, caching=True)
       self.projs_split = json.load(open(opts.projs_split))
 
 

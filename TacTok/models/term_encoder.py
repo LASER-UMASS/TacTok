@@ -180,7 +180,8 @@ class TermEncoder(nn.Module):
 
     def encode_identifiers(self, nodes):
         encoder_initial_hidden = torch.zeros(1, len(nodes), 
-                                             self.opts.ident_vec_size)
+                                             self.opts.ident_vec_size,
+                                             device=self.opts.device)
         node_identifier_chunks = \
           torch.tensor([self.normalize_length(
                           self.opts.max_ident_chunks,
