@@ -21,6 +21,7 @@ def add_common_args(parser: argparse.ArgumentParser):
     # Subwords options
     parser.add_argument('--globals-file', type=str, default='./names/names.pickle')
     parser.add_argument('--locals-file', type=str, default='./names/locals.pickle')
+    parser.add_argument('--paths-file', type=str, default='./names/paths.pickle')
     parser.add_argument('--no-locals-file', action='store_false', dest='use_locals_file')
     parser.add_argument('--bpe-merges', type=int, default=1024)
     parser.add_argument('--ident-vec-size', type=int, default=32)

@@ -147,6 +147,7 @@ class TermEncoder(nn.Module):
         if opts.use_locals_file:
             occurances.update(
               pickle.load(open(opts.locals_file, 'rb')))
+        occurances.update(pickle.load(open(opts.paths_file, 'rb')))
         if opts.case_insensitive_idents:
             occurances = Counter({word.lower(): count for (word,count) in occurances.items()})
         self.name_tokenizer = \
