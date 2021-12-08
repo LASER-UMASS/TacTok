@@ -67,6 +67,10 @@ if __name__ == '__main__':
         vocab += list(pickle.load(open(opts.local_vocab_file, 'rb')).keys())
         vocab += ['<unk-local>']
 
+    if opts.include_paths:
+        vocab += list(pickle.load(open(opts.path_vocab_file, 'rb')).keys())
+        vocab += ['<unk-path>']
+
     opts.vocab = vocab
     projs_test = ["weak-up-to", "buchberger", "jordan-curve-theorem", "dblib", "disel", "zchinese", "zfc", "dep-map", "chinese", "UnifySL", "hoare-tut", "huffman", "PolTac", "angles", "coq-procrastination", "coq-library-undecidability", "tree-automata", "coquelicot", "fermat4", "demos", "coqoban", "goedel", "verdi-raft", "verdi", "zorns-lemma", "coqrel", "fundamental-arithmetics"]
 
