@@ -170,8 +170,8 @@ class TermEncoder(nn.Module):
             return vocab.index(data)
         elif node in localnodes:
             return vocab.index('<unk-local>')
-        elif node in paths:
-            return vocab.index('<unk-path>')
+        # elif node in paths:
+        #     return vocab.index('<unk-path>')
         else:
             return vocab.index('<unk-ident>')
 
