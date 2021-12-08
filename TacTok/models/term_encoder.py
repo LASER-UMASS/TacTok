@@ -7,6 +7,7 @@ from time import time
 from itertools import chain
 from lark.tree import Tree
 import os
+from syntax import SyntaxConfig
 from gallina import traverse_postorder
 import pdb
 import pickle
@@ -132,6 +133,7 @@ class TermEncoder(nn.Module):
     def __init__(self, opts):
         super().__init__()
         self.opts = opts
+        self.syn_conf = SyntaxConfig(opts.include_locals, opts.include_defs, opts.include_paths)
         self.vocab = opts.vocab + nonterminals
         self.input_gate = InputOutputUpdateGate(opts.term_embedding_dim, self.vocab, opts,
                                                 nonlinear=torch.sigmoid)
@@ -216,10 +218,15 @@ class TermEncoder(nn.Module):
         # the height of a node determines when it can be processed
         height2nodes = defaultdict(set)
         localnodes = set()
+        paths = set()
         
         def get_metadata(node):
             height2nodes[node.height].add(node)
-            if self.opts.include_locals and (node.data == 'constructor_var' or node.data == 'constructor_name'):
+            if self.syn_conf.include_paths and self.syn_conf.is_path(node):
+                for c in node.children:
+                    assert len(c.children) > 0
+                    paths.update(c.children)
+            if self.syn_conf.include_locals and self.syn_conf.is_local(node):
                 assert len(node.children) > 0
                 localnodes.update(node.children)
 
