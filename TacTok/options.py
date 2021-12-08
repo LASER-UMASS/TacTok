@@ -63,6 +63,10 @@ def parse_args():
         vocab += list(pickle.load(open(opts.local_vocab_file, 'rb')).keys())
         vocab += ['<unk-local>']
 
+    if opts.include_paths:
+        vocab += list(pickle.load(open(opts.path_vocab_file, 'rb')).keys())
+        vocab += ['<unk-path>']
+
     opts.vocab = vocab
 
     if opts.exp_id is None:
