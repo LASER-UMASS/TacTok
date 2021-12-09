@@ -3,7 +3,6 @@ import json
 import pickle
 import sys
 import functools
-import copy
 sys.setrecursionlimit(100000)
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../')))
 from syntax import SyntaxConfig
