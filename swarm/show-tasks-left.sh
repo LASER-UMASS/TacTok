@@ -26,7 +26,7 @@ if [ $TQDM = true ] ; then
     TOTAL=$(squeue $SFLAGS | wc -l)
     while
         OLD_JOBS=$JOBS
-        JOBS=$(squeue $SFLAGS)
+        JOBS=$(squeue $SFLAGS 2> /dev/null) 2> /dev/null
         EXIT=$?
         if [[ $EXIT -ne 0 ]]; then
            continue
@@ -39,7 +39,7 @@ if [ $TQDM = true ] ; then
     do true; done | tqdm --total $TOTAL >> /dev/null
 elif [[ $# -eq 0 ]] ; then
     while
-        JOBS=$(squeue $SFLAGS)
+        JOBS=$(squeue $SFLAGS 2> /dev/null) 2> /dev/null
         EXIT=$?
         if [[ $EXIT -ne 0 ]]; then
            continue
@@ -54,7 +54,7 @@ else
     while
         TOTAL=0
         for i in "$@"; do
-            JOBS=$(squeue $SFLAGS -n $i-evaluate-file,$i-evaluate-proof)
+            JOBS=$(squeue $SFLAGS -n $i-evaluate-file,$i-evaluate-proof 2> /dev/null) 2> /dev/null
             EXIT=$?
             if [[ $EXIT -ne 0 ]]; then
                 continue
