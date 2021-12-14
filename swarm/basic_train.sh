@@ -4,6 +4,13 @@ TT_DIR=$HOME/TacTok
 EVAL_ID=$1
 shift 1
 
+NUM_PROC_STEPS=$(ls $TT_DIR/TacTok/processed/proof_steps/train | wc -l)
+EXPECTED_STEPS=22460
+if [[ ${NUM_PROC_STEPS} -ne ${EXPECTED_STEPS} ]] ; then
+    echo "Wrong number of proof steps in $TT_DIR/TacTok/processed/proof_steps/train/; expected ${EXPECTED_STEPS}, got ${NUM_PROC_STEPS}"
+    exit 1
+fi
+
 COMMIT=$(git rev-parse --short HEAD)
 TAG=$COMMIT
 NEXT_IDX=1
