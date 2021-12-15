@@ -19,6 +19,7 @@ while [ -d $TT_DIR/TacTok/runs/${EVAL_ID}-${TAG} ]; do
     ((NEXT_IDX++))
 done
 OUTDIR=$TT_DIR/TacTok/runs/${EVAL_ID}-${TAG}
+echo "Getting git info"
 mkdir -p ${OUTDIR}/checkpoints
 git log -20 > ${OUTDIR}/glog.txt
 git status > ${OUTDIR}/gstatus.txt
@@ -28,4 +29,5 @@ git diff --cached >> ${OUTDIR}/gdiff.txt
 echo "$@" > ${OUTDIR}/flags.txt
 
 cd $TT_DIR/TacTok
+echo "Running main.py"
 python main.py --no_validation --exp_id=${EVAL_ID}-${TAG} $@
