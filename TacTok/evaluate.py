@@ -44,6 +44,7 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, default=0)
 
     opts = parser.parse_args()
+    log(opts)
     # The identifier vocabulary
     vocab = []
     if opts.include_defs:
@@ -67,7 +68,6 @@ if __name__ == '__main__':
 
     opts.vocab = vocab   
 
-    log(opts)
     opts.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     if opts.device.type == 'cpu':
         log('using CPU', 'WARNING')

@@ -43,6 +43,7 @@ def parse_args():
                                                              (only applicable when no_validation == True)')
 
     opts = parser.parse_args()
+    log(opts)
 
     torch.manual_seed(opts.seed)
     torch.backends.cudnn.deterministic = True
@@ -93,7 +94,6 @@ def parse_args():
     if (not opts.no_validation) and (opts.lr_reduce_steps is not None):
         log('--lr_reduce_steps is applicable only when no_validation == True', 'ERROR')
 
-    log(opts)
     return opts
 
 
