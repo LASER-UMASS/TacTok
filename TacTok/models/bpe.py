@@ -1,6 +1,8 @@
 from collections import Counter
 from typing import List, Dict, Tuple, Optional
 import typing
+import sys
+import progressbar
 
 
 # A Trie is a tree-based data structure for efficiently finding the longest
@@ -144,6 +146,8 @@ class LongestMatchTokenizer:
 # The algorithm implemented here is based on the 
 # https://huggingface.co/transformers/tokenizer_summary.html#byte-pair-encoding-bpe
 def get_bpe_vocab(word_counts: Dict[str, int], merges: int) -> List[str]:
+    print("Building vocab:")
+    sys.stdout.flush()
     # Our base vocab is every character in any word in our counts.
     base_vocab = list(set([x for l in [list(word) for word in word_counts.keys()]
                            for x in l]))
@@ -155,7 +159,7 @@ def get_bpe_vocab(word_counts: Dict[str, int], merges: int) -> List[str]:
     # initially splitting each word into it's characters. eg: ("best", 14) ->
     # (["b", "e", "s", "t"], 14).
     word_breakdowns = [(list(word), count) for word, count in word_counts.items()]
-    for i in range(merges):
+    for i in progressbar.progressbar(range(merges)):
         # Keep the count of each subsequent pair of chunks in our current
         # iteration.
         pair_counts: typing.Counter[Tuple[str, str]] = Counter()
