@@ -172,13 +172,13 @@ class TermEncoder(nn.Module):
                 log("Warning: Loaded subwords don't match the occurances we loaded, regenerating")
                 vocab = None
             if num_merges != opts.bpe_merges:
-                log("Warning: Loaded subwords don't match the num merges we loaded, regenerating")
+                log("Warning: Loaded subwords don't match the num merges we were passed, regenerating")
                 vocab = None
         if vocab == None:
             vocab = get_bpe_vocab(occurances, opts.bpe_merges)
             if opts.save_subwords:
                 with open(opts.save_subwords, 'w') as f:
-                    json.dump((occurances_hash, num_merges, vocab), f)
+                    json.dump((occurances_hash, opts.bpe_merges, vocab), f)
         self.name_tokenizer = \
             LongestMatchTokenizer(vocab,
                                   include_unks=opts.include_unks)
