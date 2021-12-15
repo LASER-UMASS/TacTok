@@ -11,8 +11,11 @@ from syntax import SyntaxConfig
 from gallina import traverse_postorder
 import pdb
 import pickle
+import json
 from .bpe import LongestMatchTokenizer, get_bpe_vocab
 from utils import log
+import sys
+import hashlib
 
 nonterminals = [
     'constr__constr',
@@ -159,13 +162,26 @@ class TermEncoder(nn.Module):
         occurances.update(pickle.load(open(opts.paths_file, 'rb')))
         if opts.case_insensitive_idents:
             occurances = Counter({word.lower(): count for (word,count) in occurances.items()})
+
+        vocab = None
+        occurances_hash = hashlib.sha256(json.dumps(occurances, sort_keys=True).encode()).hexdigest()
+        if opts.load_subwords and os.path.exists(opts.load_subwords):
+            with open(opts.load_subwords, 'r') as f:
+                stamp, num_merges, vocab = json.load(f)
+            if stamp != occurances_hash:
+                log("Warning: Loaded subwords don't match the occurances we loaded, regenerating")
+                vocab = None
+            if num_merges != opts.bpe_merges:
+                log("Warning: Loaded subwords don't match the num merges we loaded, regenerating")
+                vocab = None
+        if vocab == None:
+            vocab = get_bpe_vocab(occurances, opts.bpe_merges)
+            if opts.save_subwords:
+                with open(opts.save_subwords, 'w') as f:
+                    json.dump((occurances_hash, num_merges, vocab), f)
         self.name_tokenizer = \
-            LongestMatchTokenizer(get_bpe_vocab(occurances, opts.bpe_merges),
+            LongestMatchTokenizer(vocab,
                                   include_unks=opts.include_unks)
-        if opts.dump_subwords:
-            with open(opts.dump_subwords, 'w') as f:
-                for subword in self.name_tokenizer.vocab:
-                    print(subword, file=f)
 
         self.name_encoder = nn.RNN(self.name_tokenizer.vocab_size + 1,
                                    opts.ident_vec_size, batch_first=True)
