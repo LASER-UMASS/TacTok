@@ -24,7 +24,7 @@ if [ -d $DEST ]; then
     esac
 fi
 
-./swarm/save-run.sh
+./swarm/save-run.sh ${EVAL_ID}
 
 for proj_idx in {0..26}; do
     $TT_DIR/swarm/evaluate-proj-parallel.sh ${EVAL_ID} $proj_idx "$@"
