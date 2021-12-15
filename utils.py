@@ -10,6 +10,9 @@ from pathlib import Path
 import lmdb
 import pdb
 import functools
+import contextlib
+import time
+import sys
 
 
 def log(msg, msg_type='INFO'):
@@ -253,3 +256,16 @@ def iter_sexp_cache(db_path, callback):
         for i, (key, value) in enumerate(cursor):
            callback(i, key, value.decode('utf-8'))
            bar.update(i)
+
+@contextlib.contextmanager
+def print_time(msg : str, guard=True):
+    start = time.time()
+    if guard:
+        print(msg + "...", end="", file=sys.stderr)
+        sys.stderr.flush()
+    try:
+        yield
+    finally:
+        if guard:
+            print("{:.2f}s".format(time.time() - start), file=sys.stderr)
+            sys.stderr.flush()
