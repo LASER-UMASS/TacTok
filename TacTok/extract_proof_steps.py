@@ -1,6 +1,7 @@
 import os
 import json
 import pickle
+from hashlib import sha256
 from tac_grammar import CFG, TreeBuilder, NonterminalNode, TerminalNode
 import sys
 sys.setrecursionlimit(100000)
@@ -128,13 +129,17 @@ if __name__ == '__main__':
                 show_progress=True, proj_callback=term_parser.load_project)
 
     for split in ['train', 'valid']:
-        for i, step in enumerate(proof_steps[split]):
+        for step in enumerate(proof_steps[split]):
             dirname = os.path.join(args.output, split)
             if not os.path.exists(dirname):
                 os.makedirs(dirname)
+            step_hash = sha256(repr(step).encode('utf-8')).hexdigest()
             if args.filter:
-                pickle.dump(step, open(os.path.join(dirname, '%s-%08d.pickle' % (args.filter, i)), 'wb'))
+                outpath = os.path.join(dirname, f"{args.filter}-{step_hash}.pickle")
             else:
-                pickle.dump(step, open(os.path.join(dirname, '%08d.pickle' % i), 'wb'))
+                outpath = os.path.join(dirname, f"{step_hash}.pickle")
+            if os.path.exists(outpath):
+                print("WARNING: step file already exists with hash {step_hash}, overwriting...", file=sys.stderr)
+            pickle.dump(step, open(outpath, 'wb'))
 
     print('output saved to ', args.output)
