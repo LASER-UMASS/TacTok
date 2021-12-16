@@ -138,7 +138,7 @@ if __name__ == '__main__':
     print(f"{num_discarded} proof steps discarded total")
 
     for split in ['train', 'valid']:
-        for step in enumerate(proof_steps[split]):
+        for step in proof_steps[split]:
             dirname = os.path.join(args.output, split)
             if not os.path.exists(dirname):
                 os.makedirs(dirname)
