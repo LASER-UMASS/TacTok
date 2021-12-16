@@ -25,13 +25,6 @@ constructor_names = {}
 
 sexp_cache = SexpCache('../sexp_cache', readonly=True)
 
-# Preorder traversal makes it easier
-def traverse_preorder(node, callback):
-    callback(node)
-    for c in node.children:
-        if isinstance(c, Tree):
-            traverse_preorder(c, callback)
-
 def parse_goal(g):
     return term_parser.parse(sexp_cache[g['sexp']])
 
@@ -52,33 +45,48 @@ def count(args, term_parser, filename, proof_data):
 
     # count occurrences within a goal
     def count_in_goal(node):
-        if SyntaxConfig.is_path(node):
+    
+        def count_children(node):
+            for c in node.children:
+                if isinstance(c, Tree):
+                    count_in_goal(c)
+    
+        if SyntaxConfig.is_path(node) and node.children:
             # paths
             if args.include_paths:
                 for c in node.children:
-                    ident = c.children[0].data
-                    incr_ident(ident, paths)
-                    incr_ident(ident, merged)
-            if not args.paths_in_defs:
-                node.children = [] # don't treat these like global definitions
-        elif args.include_defs and SyntaxConfig.is_ident(node):
+                    if c.children:
+                        ident = c.children[0].data
+                        incr_ident(ident, paths)
+                        incr_ident(ident, merged)
+            if args.paths_in_defs:
+                # include paths in global definitions, too
+                count_children(node)
+        elif args.include_defs and SyntaxConfig.is_ident(node) and node.children:
             # global definitions and theorems
             ident = node.children[0].data
             incr_ident(ident, defs)
             incr_ident(ident, merged)
-        elif args.include_locals and SyntaxConfig.is_local(node):
+            count_children(node)
+        elif args.include_locals and SyntaxConfig.is_local(node) and node.children:
             # local variables
             ident = node.children[0].data
             incr_ident(ident, local_defs)
             incr_ident(ident, merged)
+            count_children(node)
         elif args.include_constructor_names and SyntaxConfig.is_constructor(node) and node.children:
+            # constructors
             child = node.children.pop()
-            if SyntaxConfig.is_ident(child):
+            if SyntaxConfig.is_ident(child) and child.children:
                 ident = child.children[0].data
                 incr_ident(ident, constructor_names)
                 incr_ident(ident, merged)
+            count_children(node)
+        else:
+            # recurse
+            count_children(node)
 
-    traverse_preorder(goal_ast, count_in_goal)
+    count_in_goal(goal_ast)
 
 def dump(dirname, filename, idents):
     names_file = open(os.path.join(dirname, filename), 'wb')
