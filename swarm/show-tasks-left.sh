@@ -22,11 +22,14 @@ while getopts ":b" opt; do
 done
 shift $((OPTIND-1))
 if [ $TQDM = true ] ; then
-    [[ $# -eq 0 ]] || (echo "-b is unsupported with eval ids" && exit 1)
-    TOTAL=$(squeue $SFLAGS | wc -l)
+    [[ $# -le 1 ]] || (echo "-b is unsupported with multiple eval ids" && exit 1)
+    if [[ $# -eq 1 ]]; then
+        FILTER_FLAGS="-n $1-evaluate-file,$1-evaluate-proof"
+    fi
+    TOTAL=$(squeue $SFLAGS ${FILTER_FLAGS} | wc -l)
     while
         OLD_JOBS=$JOBS
-        JOBS=$(squeue $SFLAGS 2> /dev/null) 2> /dev/null
+        JOBS=$(squeue $SFLAGS ${FILTER_FLAGS} 2> /dev/null) 2> /dev/null
         EXIT=$?
         if [[ $EXIT -ne 0 ]]; then
            continue
