@@ -49,7 +49,7 @@ elif [[ $# -eq 0 ]] ; then
         sleep 0.1
         [ "$JOBS" != "" ]
     do true; done
-    echo "\r0"
+    echo $'\r 0'
 else
     while
         TOTAL=0
