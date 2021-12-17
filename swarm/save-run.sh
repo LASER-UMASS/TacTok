@@ -14,3 +14,5 @@ git diff > ${OUTDIR}/gdiff.txt
 echo "CACHED" >> ${OUTDIR}/gdiff.txt
 git diff --cached >> ${OUTDIR}/gdiff.txt
 echo "$@" > ${OUTDIR}/flags.txt
+mkdir -p $OUTDIR/weights
+cp $TT_DIR/TacTok/runs/${EVAL_ID}/* $OUTDIR/weights
