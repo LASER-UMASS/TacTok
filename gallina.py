@@ -70,15 +70,15 @@ class GallinaTermParser:
         def postprocess(node, is_constructor_desc):
             children = []
             node.height = 0
-            keep_constructor_desc = is_constructor_desc and SyntaxConfig.is_constructor(node)
+            keep_constructor_desc = is_constructor_desc and syn_conf.include_constructor_names
             for c in node.children:
                 if isinstance(c, Tree):
                     node.height = max(node.height, c.height + 1)
                     children.append(c)
                 # Don't erase fully-qualified definition & theorem names
                 elif (((syn_conf.include_defs or keep_constructor_desc) and SyntaxConfig.is_label(node)) or
-                      ((syn_conf.include_paths or keep_constructor_desc) and SyntaxConfig.is_path(node)) or
-                      (syn_conf.merge_vocab and syn_conf.include_locals and SyntaxConfig.is_local(node))):
+                ((syn_conf.include_paths or keep_constructor_desc) and SyntaxConfig.is_path(node)) or
+                (syn_conf.merge_vocab and syn_conf.include_locals and SyntaxConfig.is_local(node))):
                     ident_wrapper = SyntaxConfig.singleton_ident(c.value)
                     node.height = 2
                     children.append(ident_wrapper)
