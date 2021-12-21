@@ -14,15 +14,15 @@ import pdb
 from utils import log
 
 
-def traverse_postorder(node, callback, parent_info=None, get_parent_info=None):
-    old_parent_info = parent_info
-    if get_parent_info is not None:
-        parent_info = get_parent_info(node, parent_info)
+def traverse_postorder(node, callback, ancestor_info=None, get_ancestor_info=None):
+    old_ancestor_info = ancestor_info
+    if get_ancestor_info is not None:
+        ancestor_info = get_ancestor_info(node, ancestor_info)
     for c in node.children:
         if isinstance(c, Tree):
-            traverse_postorder(c, callback, parent_info, get_parent_info)
-    if get_parent_info is not None:
-        callback(node, old_parent_info)
+            traverse_postorder(c, callback, ancestor_info, get_ancestor_info)
+    if get_ancestor_info is not None:
+        callback(node, old_ancestor_info)
     else:
         callback(node)
 
