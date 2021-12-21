@@ -67,26 +67,27 @@ class GallinaTermParser:
 
         # Postprocess: compute height, remove some tokens, make identifiers explicit
         # Make everything nonterminal for compatibility
-        def postprocess(node, is_construct_child):
+        def postprocess(node, is_constructor_desc):
             children = []
             node.height = 0
+            keep_constructor_desc = is_constructor_desc and SyntaxConfig.is_constructor(node)
             for c in node.children:
                 if isinstance(c, Tree):
                     node.height = max(node.height, c.height + 1)
                     children.append(c)
                 # Don't erase fully-qualified definition & theorem names
-                elif (((syn_conf.include_defs or is_construct_child) and SyntaxConfig.is_label(node)) or
-                ((syn_conf.include_paths or is_construct_child) and SyntaxConfig.is_path(node)) or
-                (syn_conf.merge_vocab and syn_conf.include_locals and SyntaxConfig.is_local(node))):
+                elif (((syn_conf.include_defs or keep_constructor_desc) and SyntaxConfig.is_label(node)) or
+                      ((syn_conf.include_paths or keep_constructor_desc) and SyntaxConfig.is_path(node)) or
+                      (syn_conf.merge_vocab and syn_conf.include_locals and SyntaxConfig.is_local(node))):
                     ident_wrapper = SyntaxConfig.singleton_ident(c.value)
                     node.height = 2
                     children.append(ident_wrapper)
                 # Don't erase local variable names
-                elif ((syn_conf.include_locals or is_construct_child) and SyntaxConfig.is_local(node)):
+                elif ((syn_conf.include_locals or keep_constructor_desc) and SyntaxConfig.is_local(node)):
                     var_value = SyntaxConfig.nonterminal_value(c.value)
                     node.height = 1
                     children.append(var_value)
-                elif is_construct_child:
+                elif keep_constructor_desc:
                     children.append(c)
 
              # Recover constructor names
@@ -106,10 +107,10 @@ class GallinaTermParser:
 
             node.children = children
 
-        def get_is_construct_child(node, is_construct_child):
-            return is_construct_child or SyntaxConfig.is_constructor(node)
+        def get_is_construct_desc(node, is_construct_desc):
+            return is_construct_desc or SyntaxConfig.is_constructor(node)
 
-        traverse_postorder(ast, postprocess, False, get_is_construct_child)
+        traverse_postorder(ast, postprocess, False, get_is_construct_desc)
         return ast
 
 
