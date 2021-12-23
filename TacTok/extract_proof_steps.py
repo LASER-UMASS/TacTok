@@ -50,6 +50,8 @@ num_no_parse = 0
 num_empty_goal = 0
 
 def process_proof(term_parser, filename, proof_data):
+    print("processing now")
+    exit()
     if 'entry_cmds' in proof_data:
         is_synthetic = True
     else:

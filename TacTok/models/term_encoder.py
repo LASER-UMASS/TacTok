@@ -219,6 +219,8 @@ class TermEncoder(nn.Module):
         return False
 
     def encode_identifiers(self, nodes):
+        print("encoding identifiers")
+        exit()
         encoder_initial_hidden = torch.zeros(1, len(nodes),
                                              self.opts.ident_vec_size,
                                              device=self.opts.device)
@@ -240,6 +242,43 @@ class TermEncoder(nn.Module):
                         for node in nodes],
                        device=self.opts.device)
         one_hot_chunks = \
+          torch.zeros(len(nodes), self.opts.max_ident_chunks,
+                      self.name_tokenizer.vocab_size + 1,
+                      device=self.opts.device)\
+               .scatter_(2,
+                         node_identifier_chunks.unsqueeze(2),
+                         1.0)
+
+        output, final_hidden = self.name_encoder(one_hot_chunks,
+                                                 encoder_initial_hidden)
+        return final_hidden[0]
+
+
+    def encode_dots(self, nodes):
+        print("encoding dots")
+        encoder_initial_hidden = torch.zeros(1, len(nodes),
+                                             self.opts.ident_vec_size,
+                                             device=self.opts.device)
+
+        # iterate through paths, and change paths to dot paths
+        if self.opts.max_dots == 0:
+            return encoder_initial_hidden[0]
+        node_dots = \
+          torch.tensor([self.normalize_length(
+                          self.opts.max_dots,
+                          0,
+                          # Add 1 here to account for the padding value of zero
+                          [tok + 1 for tok in
+                           self.name_tokenizer.tokenize_to_idx(
+                             node.children[-1].data.lower() if self.opts.case_insensitive_idents
+                             else node.children[-1].data)]
+                          # This checks to see if the node is some sort of identifier,
+                          # including an identifier that makes up part of a path
+                           if self.should_bpe_encode(node) else
+                           [])
+                        for node in nodes],
+                       device=self.opts.device)
+        dot_chunks = \
           torch.zeros(len(nodes), self.opts.max_ident_chunks,
                       self.name_tokenizer.vocab_size + 1,
                       device=self.opts.device)\
