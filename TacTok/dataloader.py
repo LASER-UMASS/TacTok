@@ -25,6 +25,8 @@ class ProofStepsData(Dataset):
         elif split == 'train_valid':
             self.proof_steps = glob(os.path.join(opts.datapath, 'train/*.pickle')) + \
                                glob(os.path.join(opts.datapath, 'valid/*.pickle'))
+        if opts.max_tuples is not None:
+            self.proof_steps = self.proof_steps[:opts.max_tuples]
         random.shuffle(self.proof_steps)
         print('%d proof steps in %s' % (len(self), split))
 
