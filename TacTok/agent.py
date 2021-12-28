@@ -13,6 +13,7 @@ from random import random
 import pdb
 from hashlib import sha1
 import gc
+import sys
 from syntax import SyntaxConfig
 from copy import deepcopy
 from time import time
@@ -114,11 +115,18 @@ class Agent:
         log('training with teacher forcing %f..' % self.opts.teacher_forcing)
 
         bar = ProgressBar(max_value=len(self.dataloader['train']))
+        loss_since_print = 0.0
         for i, data_batch in enumerate(self.dataloader['train']):
             use_teacher_forcing = random() < self.opts.teacher_forcing
             asts, loss = self.model(data_batch['env'], data_batch['local_context'], 
                                     data_batch['goal'], data_batch['tactic_actions'], use_teacher_forcing, data_batch['prev_tokens'])
             # log('\nteacher forcing = %s, loss = %f' % (str(use_teacher_forcing), loss.item()))
+            if self.opts.print_loss_every is not None:
+                loss_since_print += loss.item()
+                if (i + 1) % self.opts.print_loss_every == 0:
+                    avg_loss_since_print = loss_since_print / self.opts.print_loss_every
+                    loss_since_print = 0.0
+                    print(f"loss: {avg_loss_since_print}", file=sys.stderr)
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step() 

@@ -27,6 +27,7 @@ def parse_args():
     parser.add_argument('--resume', type=str, help='the model checkpoint to resume')
     parser.add_argument('--no_validation', action='store_true', help='no validation is performed')
     parser.add_argument('--save_model_epochs', type=int, default=1, help='the number of epochs between model savings')
+    parser.add_argument('--print_loss_every', type=int, default=None, help='Print the loss every n epochs')
     parser.add_argument('--num_workers', type=int, default=4, help='the number of data-loading threads')
     parser.add_argument('--smoke', action='store_true')
     parser.add_argument('--seed', type=int, default=0)
