@@ -122,12 +122,6 @@ class Agent:
             asts, loss = self.model(data_batch['env'], data_batch['local_context'], 
                                     data_batch['goal'], data_batch['tactic_actions'], use_teacher_forcing, data_batch['prev_tokens'])
             # log('\nteacher forcing = %s, loss = %f' % (str(use_teacher_forcing), loss.item()))
-            if self.opts.print_loss_every is not None:
-                loss_since_print += loss.item()
-                if (i + 1) % self.opts.print_loss_every == 0:
-                    avg_loss_since_print = loss_since_print / self.opts.print_loss_every
-                    loss_since_print = 0.0
-                    print(f"loss: {avg_loss_since_print}", file=sys.stderr)
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step() 
@@ -135,6 +129,13 @@ class Agent:
             bar.update(i)
             if self.opts.smoke and i == 11:
                 break
+            if self.opts.print_loss_every is not None:
+                loss_since_print += loss.item()
+                if (i + 1) % self.opts.print_loss_every == 0:
+                    avg_loss_since_print = loss_since_print / self.opts.print_loss_every
+                    loss_since_print = 0.0
+                    print(f"loss: {avg_loss_since_print}", file=sys.stderr)
+                    sys.stderr.flush()
 
         log('\ntraining losses: %f' % loss)
 
