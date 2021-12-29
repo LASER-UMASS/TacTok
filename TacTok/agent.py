@@ -112,7 +112,8 @@ class Agent:
 
     def train(self, n_epoch):
         self.model.train()
-        log('training with teacher forcing %f..' % self.opts.teacher_forcing)
+        lr = self.optimizer.param_groups[0]['lr']
+        log(f'training with teacher forcing {self.opts.teacher_forcing}, learning rate {lr}..')
 
         bar = ProgressBar(max_value=len(self.dataloader['train']))
         loss_since_print = 0.0
