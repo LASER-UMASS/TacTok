@@ -88,6 +88,8 @@ class SerAPIWrapper:
             print('print_constr failed for sexpr {}'.format(unparsed))
             print('error: {}\n'.format(e))
             return
-        if name and name.startswith('@'):
-            name = name[1:]
-        return name.rsplit('.', 1)[-1]
+        if name:
+            if name.startswith('@'):
+                name = name[1:]
+            name = name.rsplit('.', 1)[-1]
+        return name
