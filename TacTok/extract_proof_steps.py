@@ -1,6 +1,7 @@
 import os
 import json
 import pickle
+from hashlib import sha256
 from tac_grammar import CFG, TreeBuilder, NonterminalNode, TerminalNode
 import sys
 sys.setrecursionlimit(100000)
@@ -45,6 +46,8 @@ projs_split = json.load(open('../projs_split.json'))
 proof_steps = {'train': [], 'valid': [], 'test': []}
 
 num_discarded = 0
+num_no_parse = 0
+num_empty_goal = 0
 
 def process_proof(term_parser, filename, proof_data):
     if 'entry_cmds' in proof_data:
@@ -52,6 +55,8 @@ def process_proof(term_parser, filename, proof_data):
     else:
         is_synthetic = False
     global num_discarded
+    global num_no_parse
+    global num_empty_goal
 
     if args.filter and not md5(filename.encode()).hexdigest().startswith(args.filter):
         return
@@ -79,6 +84,7 @@ def process_proof(term_parser, filename, proof_data):
         # local context & goal
         if step['goal_ids']['fg'] == []:
             num_discarded += 1
+            num_empty_goal += 1
             continue
         goal_id = step['goal_ids']['fg'][0]
         local_context, goal = parse_goal(term_parser, proof_data['goals'][str(goal_id)])
@@ -88,6 +94,7 @@ def process_proof(term_parser, filename, proof_data):
             actions = tactic2actions(tac_str)
         except (UnexpectedCharacters, ParseError) as ex:
             num_discarded += 1
+            num_no_parse += 1
             continue
         proof_steps[split].append({'file': filename, 
                                    'proof_name': proof_data['name'],
@@ -126,15 +133,22 @@ if __name__ == '__main__':
 
     iter_proofs(args.data_root, partial(process_proof, term_parser), include_synthetic=False,
                 show_progress=True, proj_callback=term_parser.load_project)
+    print(f"{num_empty_goal} proof steps discarded because of an empty goal")
+    print(f"{num_no_parse} proof steps discarded because of parsing issues")
+    print(f"{num_discarded} proof steps discarded total")
 
     for split in ['train', 'valid']:
-        for i, step in enumerate(proof_steps[split]):
+        for step in proof_steps[split]:
             dirname = os.path.join(args.output, split)
             if not os.path.exists(dirname):
                 os.makedirs(dirname)
+            step_hash = sha256(repr(step).encode('utf-8')).hexdigest()
             if args.filter:
-                pickle.dump(step, open(os.path.join(dirname, '%s-%08d.pickle' % (args.filter, i)), 'wb'))
+                outpath = os.path.join(dirname, f"{args.filter}-{step_hash}.pickle")
             else:
-                pickle.dump(step, open(os.path.join(dirname, '%08d.pickle' % i), 'wb'))
+                outpath = os.path.join(dirname, f"{step_hash}.pickle")
+            if os.path.exists(outpath):
+                print("WARNING: step file already exists with hash {step_hash}, overwriting...", file=sys.stderr)
+            pickle.dump(step, open(outpath, 'wb'))
 
     print('output saved to ', args.output)

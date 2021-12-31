@@ -10,9 +10,13 @@ function usage {
         exit 1
 }
 TQDM=false
-while getopts ":b" opt; do
+while getopts ":bB:" opt; do
   case "$opt" in
     b)
+      TQDM=true
+      ;;
+    B)
+      START_TOTAL="${OPTARG}"
       TQDM=true
       ;;
     ?)
@@ -22,11 +26,16 @@ while getopts ":b" opt; do
 done
 shift $((OPTIND-1))
 if [ $TQDM = true ] ; then
-    [[ $# -eq 0 ]] || (echo "-b is unsupported with eval ids" && exit 1)
-    TOTAL=$(squeue $SFLAGS | wc -l)
+    [[ $# -le 1 ]] || (echo "-b is unsupported with multiple eval ids" && exit 1)
+    if [[ $# -eq 1 ]]; then
+        FILTER_FLAGS="-n $1-evaluate-file,$1-evaluate-proof"
+    fi
+    TOTAL=$(squeue $SFLAGS ${FILTER_FLAGS} | wc -l)
+    T="${START_TOTAL:-$TOTAL}"
+    INITIAL=$(echo "$T - $TOTAL" | bc)
     while
         OLD_JOBS=$JOBS
-        JOBS=$(squeue $SFLAGS 2> /dev/null) 2> /dev/null
+        JOBS=$(squeue $SFLAGS ${FILTER_FLAGS} 2> /dev/null) 2> /dev/null
         EXIT=$?
         if [[ $EXIT -ne 0 ]]; then
            continue
@@ -36,7 +45,7 @@ if [ $TQDM = true ] ; then
         fi
         sleep 0.1
         [ "$JOBS" != "" ]
-    do true; done | tqdm --total $TOTAL >> /dev/null
+    do true; done | tqdm --total ${START_TOTAL:-$TOTAL} --initial=$INITIAL>> /dev/null
 elif [[ $# -eq 0 ]] ; then
     while
         JOBS=$(squeue $SFLAGS 2> /dev/null) 2> /dev/null
@@ -49,7 +58,7 @@ elif [[ $# -eq 0 ]] ; then
         sleep 0.1
         [ "$JOBS" != "" ]
     do true; done
-    echo "\r0"
+    echo $'\r 0'
 else
     while
         TOTAL=0
