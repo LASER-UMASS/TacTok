@@ -1,8 +1,8 @@
 # A script to combine TacTok results
 
-# Call this with python combine_results.py --results-dir-list <dir strings separated by spaces>
+# Call this with python combine_results.py --results_dir_list <dir strings separated by spaces>
 
-# Where --results-dir-list is a list of the directories where the results were put (usually
+# Where --results_dir_list is a list of the directories where the results were put (usually
 # TacTok/evaluation/<exp-id>)
 
 # It will print the resulting percentage, and the successful and total proof
