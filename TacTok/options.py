@@ -43,6 +43,7 @@ def parse_args():
     parser.add_argument('--lr_reduce_patience', type=int, default=3)
     parser.add_argument('--lr_reduce_steps', default=2, type=int, help='the number of steps before reducing the learning rate \
                                                              (only applicable when no_validation == True)')
+    parser.add_argument('--gamma', default=0.1, type=float)
 
     opts = parser.parse_args()
     log(opts)

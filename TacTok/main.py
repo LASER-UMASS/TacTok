@@ -27,7 +27,7 @@ def main():
                                     momentum=opts.momentum,
                                     weight_decay=opts.l2)
     if opts.no_validation:
-        scheduler = StepLR(optimizer, step_size=opts.lr_reduce_steps, gamma=0.1) 
+        scheduler = StepLR(optimizer, step_size=opts.lr_reduce_steps, gamma=opts.gamma)
     else:
         scheduler = ReduceLROnPlateau(optimizer, patience=opts.lr_reduce_patience, verbose=True)
 
