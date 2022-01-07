@@ -3,7 +3,7 @@
 set -e
 shopt -s nullglob
 
-[[ "$#" -ne 1 ]] && echo "Wrong number of parameters! This script takes one argument, a directory to search" && exit 1
+[[ "$#" -ne 1 ]] && echo "Wrong number of parameters! This script takes one argument, a directory to search" 1>&2 && exit 1
 
 TT_DIR=$HOME/work/TacTok
 
