@@ -3,8 +3,6 @@
 import subprocess
 import argparse
 import csv
-import os
-import io
 from os.path import expandvars
 
 parser = argparse.ArgumentParser()
