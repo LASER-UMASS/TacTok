@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-SFLAGS="-u $USER -h"
+SFLAGS="-u $USER -h -r"
 
 set -e
 function usage {
