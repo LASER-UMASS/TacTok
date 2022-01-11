@@ -17,7 +17,12 @@ mkdir -p output/evaluate/${EVAL_ID}
 
 for proof_idx in $(eval echo "{0..$(($NUM_PROOFS - 1))}"); do
   PROOF=$(echo "$PROOFS" | awk "NR==(${proof_idx}+1)")
-  sbatch -p defq -J ${EVAL_ID}-evaluate-proof \
-    --output=output/evaluate/${EVAL_ID}/evaluate_proj_${PROJ_IDX}_${FILE_IDX}_${proof_idx}.out \
-    ${TT_DIR}/swarm/evaluate-proj.sh ${EVAL_ID} --proj_idx ${PROJ_IDX} --file_idx ${FILE_IDX} --proof ${PROOF} "$@"
+  while
+    sbatch -p defq -J ${EVAL_ID}-evaluate-proof \
+      --output=output/evaluate/${EVAL_ID}/evaluate_proj_${PROJ_IDX}_${FILE_IDX}_${proof_idx}.out \
+      ${TT_DIR}/swarm/evaluate-proj.sh ${EVAL_ID} --proj_idx ${PROJ_IDX} --file_idx ${FILE_IDX} --proof ${PROOF} "$@"
+    (( $? != 0 ))
+  do
+    echo "Submission failed, retrying..."
+  done
 done
