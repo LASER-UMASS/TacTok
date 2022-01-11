@@ -23,5 +23,5 @@ while
 do
     echo "Submission failed, retrying with delay ${BACKOFF_AMOUNT}s..." >&2
     /usr/bin/env sleep $BACKOFF_AMOUNT
-    ((BACKOFF_AMOUNT*=2))
+    BACKOFF_AMOUNT=$(echo "BACKOFF_AMOUNT * 2" | bc)
 done
