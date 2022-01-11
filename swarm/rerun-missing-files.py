@@ -13,18 +13,13 @@ args, rest_args = parser.parse_known_args()
 tt_dir = expandvars("$HOME/work/TacTok")
 
 def submit_array(proj_idx: int, file_idxs: List[int]):
-    success = False
-    while success == False:
-        result = subprocess.run(["sbatch",
-                                 "-p", "defq",
-                                 "-J", f"{args.eval_id}-evaluate-file",
-                                 f"--output={tt_dir}/output/evaluate/{args.eval_id}/evaluate_proj_{proj_idx}_%a.out",
-                                 f"--array={','.join(file_idxs)}",
-                                 f"{tt_dir}/swarm/evaluate-proj-array-item.sbatch",
-                                 args.eval_id, proj_idx] + rest_args)
-        success = result.returncode == 0
-        if not success:
-            print("Batch submission failed, retrying...", file=sys.stderr)
+    result = subprocess.run(["{tt_dir}/swarm/sbatch-retry.sh",
+                             "-J", f"{args.eval_id}-evaluate-file",
+                             "-p", "defq",
+                             f"--output={tt_dir}/output/evaluate/{args.eval_id}/evaluate_proj_{proj_idx}_%a.out",
+                             f"--array={','.join(file_idxs)}",
+                             f"{tt_dir}/swarm/evaluate-proj-array-item.sbatch",
+                             args.eval_id, proj_idx] + rest_args)
 
 result = subprocess.Popen([f"{tt_dir}/swarm/find-missing-outputs-csv.sh",
                            f"{tt_dir}/TacTok/evaluation/{args.eval_id}"],
