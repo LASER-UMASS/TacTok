@@ -9,8 +9,13 @@ PROJ=$(jq -r ".projs_test[]" ${TT_DIR}/projs_split.json | awk "NR==($PROJ_IDX+1)
 NUM_FILES=$(find ${TT_DIR}/data/${PROJ} -name "*.json" | wc -l)
 
 mkdir -p output/evaluate/${EVAL_ID}
-
-sbatch -p longq -J ${EVAL_ID}-evaluate-file \
-  --output=output/evaluate/${EVAL_ID}/evaluate_proj_${PROJ_IDX}_%a.out \
-  --array=0-$(($NUM_FILES - 1 )) \
-  $TT_DIR/swarm/evaluate-proj-array-item.sbatch ${EVAL_ID} ${PROJ_IDX} "$@"
+while
+    sbatch -p longq -J ${EVAL_ID}-evaluate-file \
+      --output=output/evaluate/${EVAL_ID}/evaluate_proj_${PROJ_IDX}_%a.out \
+      --array=0-$(($NUM_FILES - 1 )) \
+      $TT_DIR/swarm/evaluate-proj-array-item.sbatch ${EVAL_ID} ${PROJ_IDX} "$@"
+    success=$?
+    (( ! success ))
+do
+    echo "Submission failed, retrying..."
+done
