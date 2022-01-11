@@ -33,5 +33,3 @@ for proj_idx in {0..26}; do
     $TT_DIR/swarm/evaluate-proj-parallel.sh ${EVAL_ID} $proj_idx "$@"
 done
 
-set -x
-${TT_DIR}/swarm/show-tasks-left.sh -B 661 ${EVAL_ID}

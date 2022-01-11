@@ -14,3 +14,4 @@ $TT_DIR/swarm/sbatch-retry.sh -J ${EVAL_ID}-evaluate-file -p longq \
   --output=output/evaluate/${EVAL_ID}/evaluate_proj_${PROJ_IDX}_%a.out \
   --array=0-$(($NUM_FILES - 1 )) \
   $TT_DIR/swarm/evaluate-proj-array-item.sbatch ${EVAL_ID} ${PROJ_IDX} "$@"
+
