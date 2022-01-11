@@ -13,8 +13,8 @@ while getopts ":J:" opt; do
         ;;
     esac
 done
+JOBS_BEFORE=$($TT_DIR/swarm/squeue-retry.sh $SFLAGS)
 while
-    JOBS_BEFORE=$($TT_DIR/swarm/squeue-retry.sh $SFLAGS)
     sbatch $@
     JOBS_AFTER=$($TT_DIR/swarm/squeue-retry.sh $SFLAGS)
     diff <(echo "$JOBS_BEFORE" | awk '{print $1}' | sort) \
@@ -23,5 +23,6 @@ while
 do
     echo "Submission failed, retrying with delay ${BACKOFF_AMOUNT}s..." >&2
     /usr/bin/env sleep $BACKOFF_AMOUNT
-    BACKOFF_AMOUNT=$(echo "BACKOFF_AMOUNT * 2" | bc)
+    BACKOFF_AMOUNT=$(echo "$BACKOFF_AMOUNT * 2" | bc)
+    JOBS_BEFORE="$JOBS_AFTER"
 done
