@@ -7,6 +7,7 @@ PROJ_IDX=$2
 shift 2
 PROJ=$(jq -r ".projs_test[]" ${TT_DIR}/projs_split.json | awk "NR==($PROJ_IDX+1)")
 NUM_FILES=$(find ${TT_DIR}/data/${PROJ} -name "*.json" | wc -l)
+if (( $NUM_FILES == 0 )); then exit 0 fi
 
 mkdir -p output/evaluate/${EVAL_ID}
 while
