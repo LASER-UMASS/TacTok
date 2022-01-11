@@ -14,7 +14,7 @@ while
       --output=output/evaluate/${EVAL_ID}/evaluate_proj_${PROJ_IDX}_%a.out \
       --array=0-$(($NUM_FILES - 1 )) \
       $TT_DIR/swarm/evaluate-proj-array-item.sbatch ${EVAL_ID} ${PROJ_IDX} "$@"
-    success=$?
+    success=[[ $? != 0 ]]
     (( ! success ))
 do
     echo "Submission failed, retrying..."
