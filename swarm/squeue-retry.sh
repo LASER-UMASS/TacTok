@@ -2,7 +2,7 @@
 
 BACKOFF_AMOUNT=0.001
 while
-    squeue $@ 2> /dev/null
+    squeue "$@" 2> /dev/null
     (( $? != 0 ))
 do 
    /usr/bin/env sleep $BACKOFF_AMOUNT

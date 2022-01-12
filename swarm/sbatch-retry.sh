@@ -15,7 +15,7 @@ while getopts ":J:" opt; do
 done
 JOBS_BEFORE=$($TT_DIR/swarm/squeue-retry.sh $SFLAGS)
 while
-    sbatch $@
+    sbatch "$@"
     /usr/bin/env sleep $BACKOFF_AMOUNT
     JOBS_AFTER=$($TT_DIR/swarm/squeue-retry.sh $SFLAGS)
     diff <(echo "$JOBS_BEFORE" | awk '{print $1}' | sort) \
