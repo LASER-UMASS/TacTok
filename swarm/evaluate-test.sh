@@ -11,7 +11,7 @@ shift 1
 DEST="$TT_DIR/TacTok/evaluation/$EVAL_ID"
 
 if [ -d $DEST ]; then
-    read -r -p "Destination directory exists. Remove it? [y/N] " input
+    read -r -p "Destination directory $DEST exists. Remove it? [y/N] " input
     case $input in 
         [yY][eE][sS]|[yY])
         rm -r "$DEST" ;;
