@@ -10,7 +10,7 @@ NUM_FILES=$(find ${TT_DIR}/data/${PROJ} -name "*.json" | wc -l)
 if (( $NUM_FILES == 0 )); then exit 0; fi
 
 mkdir -p output/evaluate/${EVAL_ID}
-$TT_DIR/swarm/sbatch-retry.sh -J ${EVAL_ID}-evaluate-file -p longq \
+$TT_DIR/swarm/sbatch-retry.sh -J ${EVAL_ID}-evaluate-file -p defq \
   --output=output/evaluate/${EVAL_ID}/evaluate_proj_${PROJ_IDX}_%a.out \
   --array=0-$(($NUM_FILES - 1 )) \
   $TT_DIR/swarm/evaluate-proj-array-item.sbatch ${EVAL_ID} ${PROJ_IDX} "$@"
