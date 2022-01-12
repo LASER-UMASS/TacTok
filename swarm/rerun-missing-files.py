@@ -16,6 +16,7 @@ def submit_array(proj_idx: int, file_idxs: List[int]):
     result = subprocess.run(["{tt_dir}/swarm/sbatch-retry.sh",
                              "-J", f"{args.eval_id}-evaluate-file",
                              "-p", "defq",
+                             "--comment", f"{proj_idx}",
                              f"--output={tt_dir}/output/evaluate/{args.eval_id}/evaluate_proj_{proj_idx}_%a.out",
                              f"--array={','.join(file_idxs)}",
                              f"{tt_dir}/swarm/evaluate-proj-array-item.sbatch",

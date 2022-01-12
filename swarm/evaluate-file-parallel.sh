@@ -18,6 +18,7 @@ mkdir -p output/evaluate/${EVAL_ID}
 for proof_idx in $(eval echo "{0..$(($NUM_PROOFS - 1))}"); do
   PROOF=$(echo "$PROOFS" | awk "NR==(${proof_idx}+1)")
   $TT_DIR/swarm/sbatch-retry.sh -J ${EVAL_ID}-evaluate-proof -p defq \
+    --comment="${PROJ_IDX}_${FILE_IDX}_${proof_idx}" \
     --output=output/evaluate/${EVAL_ID}/evaluate_proj_${PROJ_IDX}_${FILE_IDX}_${proof_idx}.out \
     ${TT_DIR}/swarm/evaluate-proj.sh ${EVAL_ID} --proj_idx ${PROJ_IDX} --file_idx ${FILE_IDX} --proof ${PROOF} "$@"
 done
