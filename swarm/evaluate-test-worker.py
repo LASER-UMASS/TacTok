@@ -103,6 +103,7 @@ def dispatch_workers(args: argparse.Namespace, rest_args: List[str]) -> None:
     subprocess.run([f"{tt_dir}/swarm/sbatch-retry.sh",
                     "-J", f"{args.eval_id}-worker",
                     "-p", "defq",
+                    "-t", "4:00:00",
                     f"--output={tt_dir}/output/workers/worker-%a.out",
                     f"--array=0-{args.num_workers-1}",
                     f"{tt_dir}/swarm/evaluation-worker.py",
