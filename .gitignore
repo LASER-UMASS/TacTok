@@ -18,7 +18,7 @@ TacTok/runs/
 output/
 data/
 proof_steps/
-*evaluation*
+TacTok/evaluation/*
 *.tar.gz
 coq_projects/
 sexp_cache/
