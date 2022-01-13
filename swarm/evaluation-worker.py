@@ -74,7 +74,7 @@ def run_job(eval_id: str, dest_dir: str, job: List[str], rest_args: List[str]) -
                f"--file_idx={file_idx}"] + proof_args + rest_args
     print("Running: ", command, flush=True)
 
-    log_dir = os.path.join(dest_dir, "output")
+    log_dir = os.path.join(tt_dir, "output/evaluate", eval_id)
     os.makedirs(log_dir, exist_ok=True)
     with open(os.path.join(log_dir, f"evaluate_proj_{task_spec}.out"), 'w') as f:
         result = subprocess.run(command, stderr=subprocess.STDOUT, stdout=f)
