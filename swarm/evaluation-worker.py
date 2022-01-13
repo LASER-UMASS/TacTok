@@ -28,6 +28,13 @@ def main():
              sys.exit(1)
     run_worker(args, rest_args)
 
+def verbose_json_loads(line_num: int, line: str):
+    try:
+        return json.loads(line)
+    except json.decoder.JSONDecodeError:
+        print(f"Error decoding json {line} at line {line_num}", file=sys.stderr)
+        raise
+
 def run_worker(args: argparse.Namespace, rest_args: List[str]):
     dest_dir = os.path.join(tt_dir, "TacTok/evaluation/", args.eval_id)
     with open(os.path.join(dest_dir, args.jobsfile), 'r') as f:
@@ -35,7 +42,7 @@ def run_worker(args: argparse.Namespace, rest_args: List[str]):
     
     if os.path.exists(os.path.join(dest_dir, args.takenfile)):
         with open(os.path.join(dest_dir, args.takenfile), 'r') as f:
-            taken_jobs = [json.loads(line) for line in f]
+            taken_jobs = [verbose_json_loads(line_num, line) for line_num, line in enumerate(f)]
     else:
         taken_jobs = []
     

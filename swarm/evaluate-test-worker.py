@@ -47,9 +47,16 @@ def main() -> None:
     dispatch_workers(args, rest_args)
     show_progress(args, dest_dir)
 
+def verbose_json_loads(line_num: int, line: str):
+    try:
+        return json.loads(line)
+    except json.decoder.JSONDecodeError:
+        print(f"Error decoding json {line} at line {line_num}", file=sys.stderr)
+        raise
+
 def reset_unfinished_jobs(args: argparse.Namespace, dest_dir: str) -> None:
     with open(os.path.join(dest_dir, args.takenfile), 'r') as f:
-         taken_jobs = [json.loads(line) for line in f]
+         taken_jobs = [verbose_json_loads(line_num, line) for line_num, line in enumerate(f)]
     with open(os.path.join(dest_dir, args.donefile), 'r') as f:
          done_jobs = [json.loads(line) for line in f]
     finished_jobs = [job for job in taken_jobs if job in done_jobs]
