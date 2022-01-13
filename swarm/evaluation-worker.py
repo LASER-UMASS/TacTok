@@ -5,6 +5,8 @@ import json
 import sys
 import subprocess
 import os.path
+import fcntl
+import time
 from os import environ
 from typing import List
 
@@ -35,13 +37,29 @@ def verbose_json_loads(line_num: int, line: str):
         print(f"Error decoding json {line} at line {line_num}", file=sys.stderr)
         raise
 
+class FileLock:
+    def __init__(self, file_handle):
+        self.file_handle = file_handle
+
+    def __enter__(self):
+        while True:
+            try:
+                fcntl.flock(self.file_handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except OSError:
+               time.sleep(0.01)
+        return self
+
+    def __exit__(self, type, value, traceback):
+        fcntl.flock(self.file_handle, fcntl.LOCK_UN)
+
 def run_worker(args: argparse.Namespace, rest_args: List[str]):
     dest_dir = os.path.join(tt_dir, "TacTok/evaluation/", args.eval_id)
-    with open(os.path.join(dest_dir, args.jobsfile), 'r') as f:
+    with open(os.path.join(dest_dir, args.jobsfile), 'r') as f, FileLock(f):
         all_jobs = [json.loads(line) for line in f]
     
     if os.path.exists(os.path.join(dest_dir, args.takenfile)):
-        with open(os.path.join(dest_dir, args.takenfile), 'r') as f:
+        with open(os.path.join(dest_dir, args.takenfile), 'r') as f, FileLock(f):
             taken_jobs = [verbose_json_loads(line_num, line) for line_num, line in enumerate(f)]
     else:
         taken_jobs = []
@@ -50,17 +68,17 @@ def run_worker(args: argparse.Namespace, rest_args: List[str]):
     starting_job = remaining_jobs[args.workerid % len(remaining_jobs)]
     current_job = starting_job
     while len(remaining_jobs) > 0:
-        with open(os.path.join(dest_dir, args.takenfile), 'a') as f:
+        with open(os.path.join(dest_dir, args.takenfile), 'a') as f, FileLock(f):
             print(json.dumps(current_job), file=f)
         success = run_job(args.eval_id, dest_dir, current_job, rest_args)
         if success:
-            with open(os.path.join(dest_dir, args.donefile), 'a') as f:
+            with open(os.path.join(dest_dir, args.donefile), 'a') as f, FileLock(f):
                 print(json.dumps(current_job), file=f)
         else:
-            with open(os.path.join(dest_dir, args.crashedfile), 'a') as f:
+            with open(os.path.join(dest_dir, args.crashedfile), 'a') as f, FileLock(f):
                 print(json.dumps(current_job), file=f)
         with open(os.path.join(dest_dir, args.takenfile), 'r') as f:
-            taken_jobs = [json.loads(line) for line in f]
+            taken_jobs = [verbose_json_loads(line_num, line) for line_num, line in enumerate(f)]
         remaining_jobs = [job for job in all_jobs if job not in taken_jobs]
         if len(remaining_jobs) > 0:
              current_job = remaining_jobs[0]
