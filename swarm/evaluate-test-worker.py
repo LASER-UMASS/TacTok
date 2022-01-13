@@ -61,11 +61,13 @@ def possibly_expand_jobs(args: argparse.Namespace, dest_dir: str) -> None:
         return
     with open(os.path.join(dest_dir, args.jobsfile), 'r') as f:
         existing_jobs = [json.loads(line) for line in f]
+    with open(os.path.join(dest_dir, args.donefile), 'r') as f:
+        done_jobs = [json.loads(line) for line in f]
     with open(os.path.join(tt_dir, args.projs_split), 'r') as f:
         projs_split = json.load(f)
     with open(os.path.join(dest_dir, args.jobsfile), 'w') as f:
         for job in existing_jobs:
-            if len(job) == 3:
+            if len(job) == 3 or job in done_jobs:
                 print(json.dumps(job), file=f)
                 continue
             assert len(job) == 2
