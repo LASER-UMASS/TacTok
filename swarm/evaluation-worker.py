@@ -51,14 +51,14 @@ def run_worker(args: argparse.Namespace, rest_args: List[str]):
     current_job = starting_job
     while len(remaining_jobs) > 0:
         with open(os.path.join(dest_dir, args.takenfile), 'a') as f:
-            print(current_job, file=f)
+            print(json.dumps(current_job), file=f)
         success = run_job(args.eval_id, dest_dir, current_job, rest_args)
         if success:
             with open(os.path.join(dest_dir, args.donefile), 'a') as f:
-                print(current_job, file=f)
+                print(json.dumps(current_job), file=f)
         else:
             with open(os.path.join(dest_dir, args.crashedfile), 'a') as f:
-                print(current_job, file=f)
+                print(json.dumps(current_job), file=f)
         with open(os.path.join(dest_dir, args.takenfile), 'r') as f:
             taken_jobs = [json.loads(line) for line in f]
         remaining_jobs = [job for job in all_jobs if job not in taken_jobs]
