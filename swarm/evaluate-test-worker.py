@@ -66,6 +66,7 @@ def possibly_expand_jobs(args: argparse.Namespace, dest_dir: str) -> None:
     with open(os.path.join(dest_dir, args.jobsfile), 'w') as f:
         for job in existing_jobs:
             if len(job) == 3:
+                print(json.dumps(job), file=f)
                 continue
             assert len(job) == 2
             proj_idx, file_idx = job
