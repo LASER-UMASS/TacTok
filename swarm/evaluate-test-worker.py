@@ -22,6 +22,7 @@ def main() -> None:
     argparser.add_argument("eval_id")
     argparser.add_argument("--mode", choices=["file", "proof"], default="file")
     argparser.add_argument("--num-workers", type=int, default=32)
+    argparser.add_argument("--worker-timeout", default="4:00:00")
     argparser.add_argument("--jobsfile", default="jobs.txt")
     argparser.add_argument("--takenfile", default="taken.txt")
     argparser.add_argument("--donefile", default="done.txt")
@@ -103,7 +104,7 @@ def dispatch_workers(args: argparse.Namespace, rest_args: List[str]) -> None:
     subprocess.run([f"{tt_dir}/swarm/sbatch-retry.sh",
                     "-J", f"{args.eval_id}-worker",
                     "-p", "defq",
-                    "-t", "4:00:00",
+                    "-t", args.worker_timeout,
                     f"--output={tt_dir}/output/workers/worker-%a.out",
                     f"--array=0-{args.num_workers-1}",
                     f"{tt_dir}/swarm/evaluation-worker.py",
