@@ -13,7 +13,7 @@ args, rest_args = parser.parse_known_args()
 tt_dir = expandvars("$HOME/work/TacTok")
 
 def submit_array(proj_idx: int, file_idxs: List[int]):
-    result = subprocess.run(["{tt_dir}/swarm/sbatch-retry.sh",
+    result = subprocess.run([f"{tt_dir}/swarm/sbatch-retry.sh",
                              "-J", f"{args.eval_id}-evaluate-file",
                              "-p", "defq",
                              "--comment", f"{proj_idx}",
