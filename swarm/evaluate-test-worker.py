@@ -21,7 +21,7 @@ def main() -> None:
     argparser = argparse.ArgumentParser()
     argparser.add_argument("eval_id")
     argparser.add_argument("--mode", choices=["file", "proof"], default="file")
-    argparser.add_argument("--num-workers", type=int, default=32)
+    argparser.add_argument("--num-workers", type=int, default=128)
     argparser.add_argument("--worker-timeout", default="4:00:00")
     argparser.add_argument("--jobsfile", default="jobs.txt")
     argparser.add_argument("--takenfile", default="taken.txt")
