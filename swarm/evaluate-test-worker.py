@@ -72,11 +72,12 @@ def possibly_expand_jobs(args: argparse.Namespace, dest_dir: str) -> None:
                 continue
             assert len(job) == 2
             proj_idx, file_idx = job
-            proj_name = projs_split['test'][proj_idx]
-            result = subprocess.run([f"{tt_dir}/print_proof_names.py",
+            proj_name = projs_split['projs_test'][proj_idx]
+            result = subprocess.run(["python3",
+                                     f"{tt_dir}/print_proof_names.py",
                                      "--proj", proj_name,
-                                     "--file_idx", file_idx], text=True)
-            for proof_name in result.stdout:
+                                     "--file_idx", str(file_idx)], text=True, stdout=subprocess.PIPE)
+            for proof_name in result.stdout.splitlines():
                 print(json.dumps([proj_idx, file_idx, proof_name]), file=f)
     pass
 
