@@ -108,7 +108,8 @@ def setup_jobs(args: argparse.Namespace, dest_dir: str) -> None:
 
 def dispatch_workers(args: argparse.Namespace, rest_args: List[str]) -> None:
     os.makedirs(f"{tt_dir}/output/workers/", exist_ok=True)
-    with open(os.path.join(tt_dir, "TacTok/evaluation", args.eval_id, "num_workers_dispatched.txt"), 'w') as f:
+    dest_dir = os.path.join(tt_dir, "TacTok/evaluation", args.eval_id)
+    with open(os.path.join(dest_dir, "num_workers_dispatched.txt"), 'w') as f:
         print(args.num_workers, file=f)
     subprocess.run([f"{tt_dir}/swarm/sbatch-retry.sh",
                     "-J", f"{args.eval_id}-worker",
