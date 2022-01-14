@@ -122,7 +122,7 @@ def get_done_jobs(args: argparse.Namespace, dest_dir: str) -> int:
     crashpath = os.path.join(dest_dir, args.crashedfile)
     if os.path.exists(donepath):
         with open(donepath, 'r') as f:
-            num_successful_jobs = len([line for line in f])
+            num_successful_jobs = len(set([line for line in f]))
     else:
         num_successful_jobs = 0
     if os.path.exists(crashpath):

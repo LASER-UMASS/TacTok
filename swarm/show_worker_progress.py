@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
+from evaluate_test_worker import show_progress
 import argparse
-from .evaluate-test-worker import show_progress
+import os.path
 
 tt_dir = os.path.expandvars("$HOME/work/TacTok")
 
