@@ -111,6 +111,10 @@ def dispatch_workers(args: argparse.Namespace, rest_args: List[str]) -> None:
     dest_dir = os.path.join(tt_dir, "TacTok/evaluation", args.eval_id)
     with open(os.path.join(dest_dir, "num_workers_dispatched.txt"), 'w') as f:
         print(args.num_workers, file=f)
+    with open(os.path.join(dest_dir, "workers_scheduled.txt"), 'w') as f:
+        pass
+    with open(os.path.join(dest_dir, "taken.txt"), 'w') as f:
+        pass
     subprocess.run([f"{tt_dir}/swarm/sbatch-retry.sh",
                     "-J", f"{args.eval_id}-worker",
                     "-p", "defq",
