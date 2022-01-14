@@ -55,6 +55,8 @@ class FileLock:
 
 def run_worker(args: argparse.Namespace, rest_args: List[str]):
     dest_dir = os.path.join(tt_dir, "TacTok/evaluation/", args.eval_id)
+    with open(os.path.join(dest_dir, "workers_scheduled.txt"), 'a') as f, FileLock(f):
+        print(args.workerid, file=f)
     with open(os.path.join(dest_dir, args.jobsfile), 'r') as f, FileLock(f):
         all_jobs = [json.loads(line) for line in f]
     

@@ -108,6 +108,8 @@ def setup_jobs(args: argparse.Namespace, dest_dir: str) -> None:
 
 def dispatch_workers(args: argparse.Namespace, rest_args: List[str]) -> None:
     os.makedirs(f"{tt_dir}/output/workers/", exist_ok=True)
+    with open(os.path.join(tt_dir, "TacTok/evaluation", args.eval_id, "num_workers_dispatched.txt"), 'w') as f:
+        print(args.num_workers, file=f)
     subprocess.run([f"{tt_dir}/swarm/sbatch-retry.sh",
                     "-J", f"{args.eval_id}-worker",
                     "-p", "defq",
@@ -132,16 +134,33 @@ def get_done_jobs(args: argparse.Namespace, dest_dir: str) -> int:
         num_crashed_jobs = 0
     return num_successful_jobs + num_crashed_jobs
 
+def get_workers_scheduled(dest_dir: str) -> int:
+    try:
+        with open(os.path.join(dest_dir, "workers_scheduled.txt"), 'r') as f:
+            return len([line for line in f])
+    except FileNotFoundError:
+        return 0
+
 def show_progress(args: argparse.Namespace, dest_dir: str) -> None:
     with open(os.path.join(dest_dir, args.jobsfile), 'r') as f:
          num_jobs_total = len([line for line in f])
     done_jobs = get_done_jobs(args, dest_dir)
-    with tqdm(total=num_jobs_total, initial=done_jobs, dynamic_ncols=True) as bar:
+    workers_scheduled = get_workers_scheduled(dest_dir)
+    with open(os.path.join(dest_dir, "num_workers_dispatched.txt"), 'r') as f:
+        num_workers_total = int(f.read())
+    with tqdm(desc="Jobs finished",
+              total=num_jobs_total, initial=done_jobs, dynamic_ncols=True) as bar, \
+         tqdm(desc="Workers scheduled",
+              total=num_workers_total, initial=workers_scheduled, dynamic_ncols=True) as wbar:
         while done_jobs < num_jobs_total:
             new_done_jobs = get_done_jobs(args, dest_dir)
             if new_done_jobs > done_jobs:
                 bar.update(new_done_jobs - done_jobs)
                 done_jobs = new_done_jobs
+            new_workers_scheduled = get_workers_scheduled(dest_dir)
+            if new_workers_scheduled > workers_scheduled:
+                wbar.update(new_workers_scheduled - workers_scheduled)
+                workers_scheduled = new_workers_scheduled
             time.sleep(0.1)
 
 if __name__ == '__main__':
