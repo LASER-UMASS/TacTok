@@ -29,15 +29,19 @@ result = subprocess.Popen([f"{tt_dir}/swarm/find-missing-outputs-csv.sh",
 csvreader = csv.reader(result.stdout)
 proj_files: Dict[int, List[int]] = {}
 last_proj_idx = None
+files_submitted = 0
 for row in csvreader:
     proj_idx, proj_name, file_idx, file_name, proof_idx, proof_name = row
     if proof_idx != "":
         continue
     if last_proj_idx and proj_idx != last_proj_idx:
         submit_array(last_proj_idx, proj_files[last_proj_idx])
+        files_submitted += len(proj_files[last_proj_idx])
     last_proj_idx = proj_idx
     if proj_idx not in proj_files:
         proj_files[proj_idx] = []
     proj_files[proj_idx].append(file_idx)
 
 submit_array(last_proj_idx, proj_files[last_proj_idx])
+files_submitted += len(proj_files[last_proj_idx])
+print(f"Submitted {files_submitted} files")
