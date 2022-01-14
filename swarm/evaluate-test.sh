@@ -19,7 +19,10 @@ if [ -d $DEST ]; then
         read -r -p "Continue from existing run? [y/N] " input
         case $input in 
             [yY][eE][sS]|[yY])
-            $TT_DIR/swarm/rerun-missing-files.py ${EVAL_ID} "$@" ;;
+            $TT_DIR/swarm/rerun-missing-files.py ${EVAL_ID} "$@"
+            set -x
+            ${TT_DIR}/swarm/show-tasks-left.sh -B 661 ${EVAL_ID}
+            exit 0 ;;
             *)
             echo "Aborting..." && exit 1 ;;
         esac ;;
