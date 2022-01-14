@@ -30,7 +30,11 @@ def get_results_dict(dirname):
 			glob(dirname + '/results_' + str(i) + '_*.json')
 		for f in files:
 			with open(f, "rb") as json_file:
-				res = json.load(json_file)["results"]
+				try:
+				    res = json.load(json_file)["results"]
+				except json.decoder.JSONDecodeError:
+				    print(f"Failed to decode file {f}")
+				    raise
 				for r in res:
 					num_theorems += 1
 					if r["success"] == True:
