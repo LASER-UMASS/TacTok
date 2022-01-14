@@ -61,17 +61,19 @@ def run_worker(args: argparse.Namespace, rest_args: List[str]):
         all_jobs = [json.loads(line) for line in f]
     
     if os.path.exists(os.path.join(dest_dir, args.takenfile)):
-        with open(os.path.join(dest_dir, args.takenfile), 'r') as f, FileLock(f):
+        with open(os.path.join(dest_dir, args.takenfile), 'r+') as f, FileLock(f):
             taken_jobs = [verbose_json_loads(line_num, line) for line_num, line in enumerate(f)]
+            remaining_jobs = [job for job in all_jobs if job not in taken_jobs]
+            starting_job = remaining_jobs[args.workerid % len(remaining_jobs)]
+            print(json.dumps(starting_job), file=f)
     else:
-        taken_jobs = []
+        with open(os.path.join(dest_dir, args.takenfile), 'a') as f, FileLock(f):
+            remaining_jobs = all_jobs
+            starting_job = rmaining_jobs[args.workerid % len(remaining_jobs)]
+            print(json.dumps(starting_job), file=f)
     
-    remaining_jobs = [job for job in all_jobs if job not in taken_jobs]
-    starting_job = remaining_jobs[args.workerid % len(remaining_jobs)]
     current_job = starting_job
     while len(remaining_jobs) > 0:
-        with open(os.path.join(dest_dir, args.takenfile), 'a') as f, FileLock(f):
-            print(json.dumps(current_job), file=f)
         success = run_job(args.eval_id, dest_dir, current_job, rest_args)
         if success:
             with open(os.path.join(dest_dir, args.donefile), 'a') as f, FileLock(f):
@@ -79,11 +81,12 @@ def run_worker(args: argparse.Namespace, rest_args: List[str]):
         else:
             with open(os.path.join(dest_dir, args.crashedfile), 'a') as f, FileLock(f):
                 print(json.dumps(current_job), file=f)
-        with open(os.path.join(dest_dir, args.takenfile), 'r') as f:
+        with open(os.path.join(dest_dir, args.takenfile), 'r+') as f, FileLock(f):
             taken_jobs = [verbose_json_loads(line_num, line) for line_num, line in enumerate(f)]
-        remaining_jobs = [job for job in all_jobs if job not in taken_jobs]
-        if len(remaining_jobs) > 0:
-             current_job = remaining_jobs[0]
+            remaining_jobs = [job for job in all_jobs if job not in taken_jobs]
+            if len(remaining_jobs) > 0:
+                current_job = remaining_jobs[0]
+            print(json.dumps(starting_job), file=f)
 
 def run_job(eval_id: str, dest_dir: str, job: List[str], rest_args: List[str]) -> bool:
     if len(job) == 3:
