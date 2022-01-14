@@ -30,7 +30,7 @@ if [ $TQDM = true ] ; then
     if [[ $# -eq 1 ]]; then
         FILTER_FLAGS="-n $1-evaluate-file,$1-evaluate-proof"
     fi
-    TOTAL=$(squeue $SFLAGS ${FILTER_FLAGS} | wc -l)
+    TOTAL=$(./swarm/squeue-retry.sh $SFLAGS ${FILTER_FLAGS} | wc -l)
     T="${START_TOTAL:-$TOTAL}"
     INITIAL=$(echo "$T - $TOTAL" | bc)
     while
