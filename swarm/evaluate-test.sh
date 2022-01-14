@@ -26,7 +26,7 @@ if [ -d $DEST ]; then
     esac
 fi
 
-./swarm/save-run.sh ${EVAL_ID}
+./swarm/save-run.sh ${EVAL_ID} "$@"
 
 set +e
 for proj_idx in {0..26}; do

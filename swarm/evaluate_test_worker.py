@@ -90,7 +90,7 @@ def possibly_expand_jobs(args: argparse.Namespace, dest_dir: str) -> None:
     pass
 
 def setup_jobs(args: argparse.Namespace, dest_dir: str) -> None:
-    subprocess.run([f"{tt_dir}/swarm/save-run.sh", args.eval_id])
+    subprocess.run([f"{tt_dir}/swarm/save-run.sh", args.eval_id] + sys.argv[1:])
     with open(os.path.join(tt_dir, args.projs_split), 'r') as f:
         projs_split = json.load(f)
     with open(os.path.join(dest_dir, args.jobsfile), 'w') as f:
