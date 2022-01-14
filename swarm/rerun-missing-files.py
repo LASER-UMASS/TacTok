@@ -5,7 +5,7 @@ import argparse
 import csv
 import sys
 from os.path import expandvars
-from typing import List
+from typing import List, Dict
 
 parser = argparse.ArgumentParser()
 parser.add_argument("eval_id")
