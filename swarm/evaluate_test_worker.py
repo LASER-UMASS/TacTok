@@ -160,13 +160,13 @@ def show_progress(args: argparse.Namespace, dest_dir: str) -> None:
               total=num_workers_total, initial=workers_scheduled, dynamic_ncols=True) as wbar:
         while done_jobs < num_jobs_total:
             new_done_jobs = get_done_jobs(args, dest_dir)
-            if new_done_jobs > done_jobs:
-                bar.update(new_done_jobs - done_jobs)
-                done_jobs = new_done_jobs
+            # if new_done_jobs > done_jobs:
+            bar.update(new_done_jobs - done_jobs)
+            done_jobs = new_done_jobs
             new_workers_scheduled = get_workers_scheduled(dest_dir)
-            if new_workers_scheduled > workers_scheduled:
-                wbar.update(new_workers_scheduled - workers_scheduled)
-                workers_scheduled = new_workers_scheduled
+            # if new_workers_scheduled > workers_scheduled:
+            wbar.update(new_workers_scheduled - workers_scheduled)
+            workers_scheduled = new_workers_scheduled
             time.sleep(0.1)
 
 if __name__ == '__main__':
