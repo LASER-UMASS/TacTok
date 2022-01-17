@@ -100,9 +100,10 @@ def setup_jobs(args: argparse.Namespace, dest_dir: str) -> None:
                 if args.mode == "file":
                     print(json.dumps([proj_idx, file_idx]), file=f)
                 else:
-                    result = subprocess.run([f"{tt_dir}/print_proof_names.py",
+                    result = subprocess.run(["python",
+                                             f"{tt_dir}/print_proof_names.py",
                                              "--proj", proj_name,
-                                             "--file_idx", str(file_idx)], text=True)
+                                             "--file_idx", str(file_idx)], text=True, stdout=subprocess.PIPE)
                     for proof_name in result.stdout:
                         print(json.dumps([proj_idx, file_idx, proof_name]), file=f)
 
