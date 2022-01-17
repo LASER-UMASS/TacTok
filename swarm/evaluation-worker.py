@@ -62,7 +62,7 @@ def run_worker(args: argparse.Namespace, rest_args: List[str]) -> None:
     
     while True:
         with open(os.path.join(dest_dir, args.takenfile), 'r+') as f, FileLock(f):
-            taken_jobs = [verbose_json_loads(line_num, line) for line_num, line in enumerate(f)]
+            taken_jobs = [verbose_json_loads(line_num, line) for line_num, line in enumerate(f) if line.strip() != ""]
             remaining_jobs = [job for job in all_jobs if job not in taken_jobs]
             if len(remaining_jobs) > 0:
                 current_job = remaining_jobs[args.workerid % len(remaining_jobs)]
