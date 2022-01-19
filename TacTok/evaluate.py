@@ -44,7 +44,7 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, default=0)
 
     opts = parser.parse_args()
-    log(opts)
+
     # The identifier vocabulary
     vocab = []
     if opts.include_defs:
