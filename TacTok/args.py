@@ -17,7 +17,11 @@ class ConfigParser(argparse.ArgumentParser):
 
         if opts.config is not None:
             with open(opts.config) as f:
-                opts.__dict__.update(**json.load(f))
+                loaded = json.load(f)
+                if not set(loaded).issubset(opts.__dict__):
+                    raise ValueError(
+                        'Invalid argument found in config. Did you pass the right file?')
+                opts.__dict__.update(**loaded)
 
         if opts.export_config is not None:
             with open(opts.export_config, 'w') as f:
