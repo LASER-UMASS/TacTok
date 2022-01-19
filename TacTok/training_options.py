@@ -4,16 +4,15 @@ import argparse
 import torch
 import numpy as np
 import random
-import json
 import sys
+from args import ConfigParser
 sys.path.append(os.path.sep.join(__file__.split(os.path.sep)[:-2]))
 from utils import log
-import pdb
 import pickle
 import common_args
 
 def parse_args():
-    parser = argparse.ArgumentParser()
+    parser = ConfigParser()
 
     common_args.add_common_args(parser)
 
@@ -45,24 +44,9 @@ def parse_args():
                                                              (only applicable when no_validation == True)')
     parser.add_argument('--gamma', default=0.1, type=float)
 
-    # config file
-    parser.add_argument('--export_config', type=str, default=None)
-    parser.add_argument('--config', type=str, default=None)
 
     opts = parser.parse_args()
 
-    if opts.config is not None:
-        with open(opts.config) as f:
-            opts.__dict__.update(**json.load(f))
-
-    if opts.export_config is not None:
-        with open(opts.export_config, 'w') as f:
-            opts_dict = vars(opts)
-            opts_dict.pop('export_config')
-            opts_dict.pop('config')
-            json.dump(opts_dict, f, separators=(',\n', ':'))
-
-    log(opts)
 
     torch.manual_seed(opts.seed)
     torch.backends.cudnn.deterministic = True

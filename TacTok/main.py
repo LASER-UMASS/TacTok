@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR
-from options import parse_args
+from training_options import parse_args
 from dataloader import create_dataloader
 from utils import log
 from agent import Agent
@@ -17,11 +17,11 @@ def main():
     # create the dataloaders
     dataloader = {'train': create_dataloader('train_valid' if opts.no_validation else 'train', opts),
                   'valid': create_dataloader('valid', opts)}
-    
-    # create the model 
+
+    # create the model
     model = Prover(opts)
     model.to(opts.device)
-  
+
     # crete the optimizer
     optimizer = torch.optim.RMSprop(model.parameters(), lr=opts.learning_rate,
                                     momentum=opts.momentum,
@@ -49,7 +49,7 @@ def main():
     best_acc = -1.
     for n_epoch in range(start_epoch, start_epoch + opts.num_epochs):
         log('EPOCH #%d' % n_epoch)
-   
+
         # training
         loss_train = agent.train(n_epoch)
 

@@ -2,7 +2,7 @@ import torch
 import numpy as np
 import random
 from glob import glob
-import argparse
+from args import ConfigParser
 import json
 import os
 import sys
@@ -19,7 +19,7 @@ import pickle
 import common_args
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
+    parser = ConfigParser()
     common_args.add_common_args(parser)
     parser.add_argument('method', type=str)
     parser.add_argument('eval_id', type=str)

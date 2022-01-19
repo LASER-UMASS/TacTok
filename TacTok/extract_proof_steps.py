@@ -11,7 +11,7 @@ from syntax import SyntaxConfig
 from gallina import GallinaTermParser
 from lark.exceptions import UnexpectedCharacters, ParseError
 from utils import iter_proofs, SexpCache
-import argparse
+from args import ConfigParser
 from hashlib import md5
 from agent import filter_env
 
@@ -112,7 +112,7 @@ def process_proof(term_parser, filename, proof_data):
        
 
 if __name__ == '__main__':
-    arg_parser = argparse.ArgumentParser(description='Extract the proof steps from CoqGym for trainig ASTactic via supervised learning')
+    arg_parser = ConfigParser(description='Extract the proof steps from CoqGym for trainig ASTactic via supervised learning')
     arg_parser.add_argument('--no_defs', action='store_false', dest='include_defs', help='do not include the names of definitions and theorems in the model')
     arg_parser.add_argument('--no_locals', action='store_false', dest='include_locals', help='do not include the names of local variables in the model')
     arg_parser.add_argument('--no_constructors', action='store_false', dest='include_constructor_names',

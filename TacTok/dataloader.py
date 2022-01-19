@@ -1,6 +1,6 @@
 import torch
 from torch.utils.data import Dataset, DataLoader
-from options import parse_args
+from training_options import parse_args
 import random
 from progressbar import ProgressBar
 import os

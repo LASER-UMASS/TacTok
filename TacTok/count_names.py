@@ -8,7 +8,7 @@ sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(_
 from syntax import SyntaxConfig
 from gallina import GallinaTermParser
 from lark.exceptions import UnexpectedCharacters, ParseError
-import argparse
+from args import ConfigParser
 from utils import iter_proofs, SexpCache
 from lark.tree import Tree
 
@@ -114,7 +114,7 @@ def dump_idents(args, dirname):
     print('output saved to ', dirname)
 
 if __name__ == '__main__':
-    arg_parser = argparse.ArgumentParser(description='Count occurrences of named datatypes and constants in the data')
+    arg_parser = ConfigParser(description='Count occurrences of named datatypes and constants in the data')
     arg_parser.add_argument('--data_root', type=str, default='../data',
                                 help='The folder for CoqGym')
     arg_parser.add_argument('--coq_projects', type=str, default='../coq_projects',
