@@ -21,7 +21,13 @@ if [ -d $DEST ]; then
             [yY][eE][sS]|[yY])
             $TT_DIR/swarm/rerun-missing-files.py ${EVAL_ID} "$@"
             set -x
-            ${TT_DIR}/swarm/show-tasks-left.sh -B 661 ${EVAL_ID}
+            ${TT_DIR}/swarm/show-tasks-left.sh -B 661 -s 20 ${EVAL_ID}
+            set +x
+            scancel -n ${EVAL_ID}-evaluate-file
+            $TT_DIR/swarm/rerun-missing-proofs.sh ${EVAL_ID} "$@"
+            set -x
+            ${TT_DIR}/swarm/show-tasks-left.sh -b  ${EVAL_ID}
+            set +x
             exit 0 ;;
             *)
             echo "Aborting..." && exit 1 ;;
@@ -37,4 +43,12 @@ for proj_idx in {0..26}; do
 done
 
 set -x
-${TT_DIR}/swarm/show-tasks-left.sh -B 661 ${EVAL_ID}
+${TT_DIR}/swarm/show-tasks-left.sh -B 661 -s 20 ${EVAL_ID}
+            set +x
+set +x
+scancel -n ${EVAL_ID}-evaluate-file
+${TT_DIR}/swarm/cancel-all-tasks.sh ${EVAL_ID}
+${TT_DIR}/swarm/rerun-missing-proofs.sh ${EVAL_ID} "$@"
+set -x
+${TT_DIR}/swarm/show-tasks-left.sh -b  ${EVAL_ID}
+set +x
