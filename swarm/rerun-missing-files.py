@@ -42,6 +42,7 @@ for row in csvreader:
         proj_files[proj_idx] = []
     proj_files[proj_idx].append(file_idx)
 
-submit_array(last_proj_idx, proj_files[last_proj_idx])
-files_submitted += len(proj_files[last_proj_idx])
+if last_proj_idx:
+    submit_array(last_proj_idx, proj_files[last_proj_idx])
+    files_submitted += len(proj_files[last_proj_idx])
 print(f"Submitted {files_submitted} files")
