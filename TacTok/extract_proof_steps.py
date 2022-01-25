@@ -10,7 +10,7 @@ from functools import partial
 from syntax import SyntaxConfig
 from gallina import GallinaTermParser
 from lark.exceptions import UnexpectedCharacters, ParseError
-from utils import iter_proofs, SexpCache
+from utils import iter_proofs, iter_file_proofs, SexpCache, get_proj
 import argparse
 from hashlib import md5
 from agent import filter_env
@@ -61,7 +61,7 @@ def process_proof(term_parser, filename, proof_data):
     if args.filter and not md5(filename.encode()).hexdigest().startswith(args.filter):
         return
 
-    proj = filename.split(os.path.sep)[2]
+    proj = get_proj(filename)
     if proj in projs_split['projs_train']:
         split = 'train'
     elif proj in projs_split['projs_valid']:
@@ -120,6 +120,8 @@ if __name__ == '__main__':
     arg_parser.add_argument('--no_paths', action='store_false', dest='include_paths', help='do not include the paths of definitions and theorems in the model')
     arg_parser.add_argument('--data_root', type=str, default='../data',
                                 help='The folder for CoqGym')
+    arg_parser.add_argument('--file', type=str, default=None,
+                            help='The file to extract')
     arg_parser.add_argument('--coq_projects', type=str, default='../coq_projects',
                                 help='The folder for the coq projects')
     arg_parser.add_argument('--output', type=str, default='./proof_steps/',
@@ -131,8 +133,12 @@ if __name__ == '__main__':
     syn_conf = SyntaxConfig(args.include_locals, args.include_defs, args.include_paths, args.include_constructor_names)
     term_parser = GallinaTermParser(args.coq_projects, syn_conf, caching=True, use_serapi=True)
 
-    iter_proofs(args.data_root, partial(process_proof, term_parser), include_synthetic=False,
-                show_progress=True, proj_callback=term_parser.load_project)
+    if args.file:
+        iter_file_proofs(args.file, partial(process_proof, term_parser), include_synthetic=False,
+                         proj_callback=term_parser.load_project)
+    else:
+        iter_proofs(args.data_root, partial(process_proof, term_parser), include_synthetic=False,
+                    show_progress=True, proj_callback=term_parser.load_project)
     print(f"{num_empty_goal} proof steps discarded because of an empty goal")
     print(f"{num_no_parse} proof steps discarded because of parsing issues")
     print(f"{num_discarded} proof steps discarded total")

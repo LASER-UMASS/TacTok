@@ -8,7 +8,9 @@ set -ex
 
 source ${TT_DIR}/swarm/prelude.sh
 
-PROJ=$(cat <(jq -r ".projs_train[]" projs_split.json) <(jq -r ".projs_valid[]" projs_split.json) | awk "NR==$1")
+PROJ=$1
 shift 1
+FILE_IDX=$SLURM_ARRAY_TASK_ID
+FILE=$(find ${TT_DIR}/data/${PROJ} -name "*.json" | awk "NR==($FILE_IDX+1)")
 cd TacTok
-python extract_proof_steps.py --data_root "../data/$PROJ" $@
+python extract_proof_steps.py --file "$FILE" $@
