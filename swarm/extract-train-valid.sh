@@ -31,13 +31,3 @@ for proj_idx in $(eval echo "{1..$NUM_PROJS}"); do
 done
 
 $TT_DIR/swarm/show-tasks-left.sh -b
-DEST='TacTok/processed/proof_steps'
-if [ -d $DEST ]; then
-    read -r -p "Processed destination directory $DEST exists. Remove it? [y/N] " input
-    case $input in
-        [yY][eE][sS]|[yY])
-        rm -r "$PROC_DEST" ;;
-        *)
-        echo "Aborting..." && exit 1 ;;
-    esac
-fi
