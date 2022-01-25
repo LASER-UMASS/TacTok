@@ -15,6 +15,8 @@ from args import ConfigParser
 import argparse
 from hashlib import md5
 from agent import filter_env
+import string
+from typing import List
 
 sexp_cache = SexpCache('../sexp_cache', readonly=True)
 
@@ -42,6 +44,14 @@ def tactic2actions(tac_str):
             actions.append(node.token)
     tree.traverse_pre(gather_actions)
     return actions
+
+rem_punc = string.punctuation.replace('\'','').replace('_', '')
+table = str.maketrans('', '', rem_punc)
+
+def tokenize_text(raw_text: str) -> List[str]:
+	without_punc = raw_text.translate(table)
+	words = without_punc.split()
+	return words
 
 projs_split = json.load(open('../projs_split.json'))
 proof_steps = {'train': [], 'valid': [], 'test': []}
@@ -75,6 +85,9 @@ def process_proof(term_parser, filename, proof_data):
         if is_synthetic:
             return
 
+    seq_raw = [] # list of strings, each string is a command
+    seq_proc_separated = [] # list of lists of strings, each string is a token
+    seq_proc_complete = [] # list of strings, each string is a token
     for i, step in enumerate(proof_data['steps']):
         # consider only tactics
         if step['command'][1] in ['VernacEndProof', 'VernacBullet', 'VernacSubproof', 'VernacEndSubproof']:
@@ -104,14 +117,23 @@ def process_proof(term_parser, filename, proof_data):
                                    'env': env,
                                    'local_context': local_context, 
                                    'goal': goal,
-                                   'tactic': {'text': tac_str, 'actions': actions},})
+                                   'tactic': {'text': tac_str, 'actions': actions},
+                                   # TacTok features
+                                   'prev_strings': seq_raw,
+                                   'prev_tactic_list': seq_proc_separated,
+                                   'prev-tokens': seq_proc_complete,})
         if is_synthetic:
             proof_steps[split][-1]['is_synthetic'] = True
             proof_steps[split][-1]['goal_id'] = proof_data['goal_id']
             proof_steps[split][-1]['length'] = proof_data['length']
         else:
             proof_steps[split][-1]['is_synthetic'] = False
-       
+
+        # Update sequence state (TacTok features)
+        seq_raw.append(tac_str)
+        text_words = tokenize_text(tac_str)
+        seq_proc_separated.append(text_words)
+        seq_proc_complete += text_words
 
 if __name__ == '__main__':
     arg_parser = ConfigParser(description='Extract the proof steps from CoqGym for trainig ASTactic via supervised learning')
