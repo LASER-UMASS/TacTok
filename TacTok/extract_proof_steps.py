@@ -70,6 +70,7 @@ def process_proof(term_parser, filename, proof_data):
         if is_synthetic:
             return
     else:
+        assert proj in projs_split['projs_test']
         split = 'test'
         if is_synthetic:
             return
