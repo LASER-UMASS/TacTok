@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-SFLAGS="-u $USER -h"
+SFLAGS="-u $USER -h -r"
 
 set -e
 function usage {
@@ -10,7 +10,8 @@ function usage {
         exit 1
 }
 TQDM=false
-while getopts ":bB:" opt; do
+STOP_AT=0
+while getopts ":bs:B:" opt; do
   case "$opt" in
     b)
       TQDM=true
@@ -18,6 +19,9 @@ while getopts ":bB:" opt; do
     B)
       START_TOTAL="${OPTARG}"
       TQDM=true
+      ;;
+    s)
+      STOP_AT="${OPTARG}"
       ;;
     ?)
       usage
@@ -30,7 +34,7 @@ if [ $TQDM = true ] ; then
     if [[ $# -eq 1 ]]; then
         FILTER_FLAGS="-n $1-evaluate-file,$1-evaluate-proof"
     fi
-    TOTAL=$(squeue $SFLAGS ${FILTER_FLAGS} | wc -l)
+    TOTAL=$(./swarm/squeue-retry.sh $SFLAGS ${FILTER_FLAGS} | wc -l)
     T="${START_TOTAL:-$TOTAL}"
     INITIAL=$(echo "$T - $TOTAL" | bc)
     while
@@ -38,13 +42,14 @@ if [ $TQDM = true ] ; then
         JOBS=$(squeue $SFLAGS ${FILTER_FLAGS} 2> /dev/null) 2> /dev/null
         EXIT=$?
         if [[ $EXIT -ne 0 ]]; then
-           continue
+            continue
         fi
+        NUM_LEFT=$(echo "$JOBS" | sed '/^\s*$/d' | wc -l)
         if [[ $OLD_JOBS ]]; then
             diff <(echo "$OLD_JOBS" | awk '{print $1}' | sort) <(echo "$JOBS" | awk '{print $1}' | sort) | grep "< "
         fi
         sleep 0.1
-        [ "$JOBS" != "" ]
+        [ "$NUM_LEFT" -gt "$STOP_AT" ]
     do true; done | tqdm --total ${START_TOTAL:-$TOTAL} --initial=$INITIAL>> /dev/null
 elif [[ $# -eq 0 ]] ; then
     while
@@ -56,7 +61,7 @@ elif [[ $# -eq 0 ]] ; then
         NUM_LEFT=$(echo "$JOBS" | wc -l)
         echo -n $'\r'${NUM_LEFT}'  '
         sleep 0.1
-        [ "$JOBS" != "" ]
+        [ "$NUM_LEFT" -gt "$STOP_AT" ]
     do true; done
     echo $'\r 0'
 else
@@ -77,7 +82,7 @@ else
         done
         echo -n $'\r'
         sleep 0.1
-        [[ ${TOTAL} -gt 0 ]]
+        [[ "${TOTAL}" -gt "${STOP_AT}" ]]
     do true; done
     echo ""
 fi
