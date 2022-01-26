@@ -121,7 +121,7 @@ def process_proof(term_parser, filename, proof_data):
                                    # TacTok features
                                    'prev_strings': seq_raw,
                                    'prev_tactic_list': seq_proc_separated,
-                                   'prev-tokens': seq_proc_complete,})
+                                   'prev_tokens': seq_proc_complete,})
         if is_synthetic:
             proof_steps[split][-1]['is_synthetic'] = True
             proof_steps[split][-1]['goal_id'] = proof_data['goal_id']
