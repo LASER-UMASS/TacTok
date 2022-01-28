@@ -22,11 +22,6 @@ class LarkEncoder(json.JSONEncoder):
                     "children": [self.default(child) for child in obj.children]}
         return json.JSONEncoder.default(self, obj) 
 
-def lark_decoder(dct):
-     if "__is_tree__" in dct:
-         return Tree(dct["data"], dct["children"], dct["meta"])
-     return dct
-
 class FileLock:
     def __init__(self, file_handle):
         self.file_handle = file_handle
