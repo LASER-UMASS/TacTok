@@ -20,10 +20,10 @@ fi
 
 mkdir $REALDEST
 git log -20 > ${REALDEST}/glog.txt
-git status > ${OUTDIR}/gstatus.txt
-git diff > ${OUTDIR}/gdiff.txt
-echo "CACHED" >> ${OUTDIR}/gdiff.txt
-git diff --cached >> ${OUTDIR}/gdiff.txt
+git status > ${REALDEST}/gstatus.txt
+git diff > ${REALDEST}/gdiff.txt
+echo "CACHED" >> ${REALDEST}/gdiff.txt
+git diff --cached >> ${REALDEST}/gdiff.txt
 
 for proj_idx in $(eval echo "{1..$NUM_PROJS}"); do
   PROJ=$(cat <(jq -r ".projs_train[]" ${TT_DIR}/projs_split.json) \
