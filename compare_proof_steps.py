@@ -42,15 +42,20 @@ def compare_context(context1, context2) -> None:
                    print(line)
 
 def check_file(filename) -> None:
-    parts = Path(filename).parts
-    i = parts.index(Path(args.stepsdir_a).parts[-1])
-    localpath = os.path.join(*parts[i + 1:])
+    if os.path.isdir(args.stepsdir_a):
+        parts = Path(filename).parts
+        i = parts.index(Path(args.stepsdir_a).parts[-1])
+        localpath = os.path.join(*parts[i + 1:])
+        filename_b = os.path.join(args.stepsdir_b, filepath)
+    else:
+        localpath = os.path.basename(args.stepsdir_b)
+        filename_b = args.stepsdir_b
     steps_a_dict = {}
     with open(filename, 'r') as fa:
         for line in fa:
             step = json.loads(line, object_hook=lark_decoder)
             steps_a_dict[(step['proof_name'], step['n_step'])] = step
-    with open(os.path.join(args.stepsdir_b, localpath), 'r') as fb:
+    with open(filename_b, 'r') as fb:
         file_matches = True
         for line in fb:
             step = json.loads(line, object_hook=lark_decoder)
@@ -103,8 +108,13 @@ def check_file(filename) -> None:
         if not file_matches and args.verbose == 0:
             print(f"Extraction for file {localpath} doesn't match")
 
-with multiprocessing.Pool(args.num_threads) as pool:
-    files = glob.glob(os.path.join(args.stepsdir_a, "**/*.json"), recursive=True)
-    res = list(tqdm(pool.imap(check_file, files),
-                    desc="Checking files",
+if os.path.isdir(args.stepsdir_a):
+    assert os.path.isdir(args.stepsdir_b), "First path is a directory, but second is a file!"
+    with multiprocessing.Pool(args.num_threads) as pool:
+        files = glob.glob(os.path.join(args.stepsdir_a, "**/*.json"), recursive=True)
+        res = list(tqdm(pool.imap(check_file, files),
+                        desc="Checking files",
                     total=len(files)))
+else:
+    assert not os.path.isdir(args.stepsdir_b), "First path is a file, but second is a directory!"
+    check_file(args.stepsdir_a)
