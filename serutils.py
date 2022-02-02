@@ -79,15 +79,13 @@ class SerAPIWrapper:
             try:
                 self.serapi.send_add(cmd, False)
             except Exception as e:
-                print('failed to import path {}'.format(path))
-                print('error: {}\n'.format(e))
-                print('original command: {}'.format('"{}"'.format(cmd)))
+                import_error_msg = '\n'.join(('failed to import path {}'.format(path),
+                                       'original command: "{}"'.format(cmd)))
+                raise ImportError(import_error_msg) from e
         try:
             name = self.serapi.print_constr(unparsed)
         except Exception as e:
-            print('print_constr failed for sexpr {}'.format(unparsed))
-            print('error: {}\n'.format(e))
-            return
+            raise LookupError('print_constr failed for sexpr {}'.format(unparsed)) from e
         if name and name.startswith('@'):
             name = name[1:]
         return name
