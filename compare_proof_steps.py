@@ -89,10 +89,15 @@ def check_file(filename) -> None:
                                         print(line)
                             else:
                                 print("Something about goals doesn't match!")
-                        elif key == "local_context" or key == "env":
-                            print(f"Key {key} doesn't match.")
-                            if args.verbose >= 3:
+                        elif key == "local_context":
+                            print(f"Key local context doesn't match.")
+                            if args.verbose >= 4:
                                 compare_context(matching_step["local_context"], step["local_context"])
+                        elif key == "env":
+                            if args.verbose >= 4:
+                                print(f"Key env doesn't match: {matching_step[key]} vs {step[key]}")
+                            else:
+                                print(f"Key env doesn't match.")
                         else:
                             if args.verbose >= 3:
                                 print(f"Key {key} doesn't match: {matching_step[key]} vs {step[key]}")
