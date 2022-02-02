@@ -46,7 +46,7 @@ def check_file(filename) -> None:
         parts = Path(filename).parts
         i = parts.index(Path(args.stepsdir_a).parts[-1])
         localpath = os.path.join(*parts[i + 1:])
-        filename_b = os.path.join(args.stepsdir_b, filepath)
+        filename_b = os.path.join(args.stepsdir_b, localpath)
     else:
         localpath = os.path.basename(args.stepsdir_b)
         filename_b = args.stepsdir_b
