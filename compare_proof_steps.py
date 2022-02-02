@@ -89,7 +89,7 @@ def check_file(filename) -> None:
                                         print(line)
                             else:
                                 print("Something about goals doesn't match!")
-                        elif key == "local_context":
+                        elif key == "local_context" or key == "env":
                             print(f"Key {key} doesn't match.")
                             if args.verbose >= 3:
                                 compare_context(matching_step["local_context"], step["local_context"])
