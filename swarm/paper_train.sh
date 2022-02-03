@@ -2,7 +2,8 @@
 
 TT_DIR=$HOME/TacTok
 
-FLAGS_DEFAULT="--num_epochs=3 --no-locals-file --max-ident-chunks=4 --bpe-merges=4096"
+FLAGS_DEFAULT="--num_epochs=3 --no-locals-file --local_vocab_file=./names/locals-known-200.pickle --max-ident-chunks=4 --datapath=proof_steps --num_workers=2 --bpe-merges=4096 \
+               --l2=1e-4 --lr_reduce_steps=2"
 
 mkdir -p $TT_DIR/output/paper-train
 
