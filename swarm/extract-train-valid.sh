@@ -19,6 +19,7 @@ if [ -d "$REALDEST" ]; then
 fi
 
 mkdir $REALDEST
+echo "$@" > ${REALDEST}/flags.txt
 git log -20 > ${REALDEST}/glog.txt
 git status > ${REALDEST}/gstatus.txt
 git diff > ${REALDEST}/gdiff.txt
@@ -34,7 +35,7 @@ for proj_idx in $(eval echo "{1..$NUM_PROJS}"); do
     continue
   fi
   sbatch --output output/extract/extract_steps_${PROJ}_%a.out -p longq --array=0-$(($NUM_FILES - 1 )) \
-    $TT_DIR/swarm/extract-steps.sh $PROJ --output=${DEST}
+    $TT_DIR/swarm/extract-steps.sh $PROJ --output=${DEST} "$@"
 done
 
 $TT_DIR/swarm/show-tasks-left.sh -b
