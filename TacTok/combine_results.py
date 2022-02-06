@@ -1,8 +1,8 @@
-# A script to process TacTok results
+# A script to combine TacTok results
 
-# Call this with python process_results.py <results-dir>
+# Call this with python combine_results.py --results_dir_list <dir strings separated by spaces>
 
-# Where "<results-dir>" is the directory where the results were put (usually
+# Where --results_dir_list is a list of the directories where the results were put (usually
 # TacTok/evaluation/<exp-id>)
 
 # It will print the resulting percentage, and the successful and total proof
@@ -16,7 +16,7 @@ import numpy as np
 import pickle
 import random
 import itertools 
-from args import ConfigParser
+import argparse
 
 projs = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,16,17,18,19,20,21,22,23,24,25,26]
 
@@ -30,11 +30,7 @@ def get_results_dict(dirname):
 			glob(dirname + '/results_' + str(i) + '_*.json')
 		for f in files:
 			with open(f, "rb") as json_file:
-				try:
-				    res = json.load(json_file)["results"]
-				except json.decoder.JSONDecodeError:
-				    print(f"Failed to decode file {f}")
-				    raise
+				res = json.load(json_file)["results"]
 				for r in res:
 					num_theorems += 1
 					if r["success"] == True:
@@ -52,11 +48,24 @@ def combine(results_dict):
 def get_success_rate(results_set, num_theorems):
 	return (float(len(results_set))/float(num_theorems))*100
 
+def combine_results(results_sets_dict):
+	s_union = set()
+	for res in results_sets_dict:
+		s_union = set().union(s_union, results_sets_dict[res])
+	return s_union
+
 if __name__ == '__main__':
-    parser = ConfigParser()
-    parser.add_argument('results_dir')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--results_dir_list', nargs="*", type=str, default=['evaluation/<exp-id>'])
     args = parser.parse_args()
-    results_dict, num_theorems = get_results_dict(args.results_dir)
-    results_set = combine(results_dict)
+    results_sets_dict = {}
+    num_theorems_list = []
+    for d in args.results_dir_list:
+    	results_dict, n_theorems = get_results_dict(d)
+    	results_sets_dict[d] = combine(results_dict)
+    	num_theorems_list.append(n_theorems)
+    assert len(set(num_theorems_list)) <= 1 # all the same number of theorems
+    num_theorems = num_theorems_list[0]
+    results_set = combine_results(results_sets_dict)
     success_rate = get_success_rate(results_set, num_theorems)
     print(f"{len(results_set)}/{num_theorems} ({success_rate:.2f}%)")

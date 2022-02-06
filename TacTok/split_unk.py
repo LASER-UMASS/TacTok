@@ -1,9 +1,10 @@
 import os
 import pickle
 import sys
+from args import ConfigParser
 sys.setrecursionlimit(100000)
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../')))
-import argparse
+
 
 # Split a dictionary into known and unknown dictionaries.
 # Sadly, I was so excited to write this simple script that I broke my toe.
@@ -32,7 +33,7 @@ def split_inputs(inputs, threshold):
 
 # Split the inputs along the threshold, then dump to files
 if __name__ == '__main__':
-    arg_parser = argparse.ArgumentParser(description='Split a dictionary into known and unknown dictionaries')
+    arg_parser = ConfigParser(description='Split a dictionary into known and unknown dictionaries')
     arg_parser.add_argument('input', metavar='<input>.pickle', type=str,
                                 help='pickle file for input dictionary')
     arg_parser.add_argument('--threshold', type=int, default=100,

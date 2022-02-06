@@ -4,16 +4,15 @@ import argparse
 import torch
 import numpy as np
 import random
-import json
 import sys
+from args import ConfigParser
 sys.path.append(os.path.sep.join(__file__.split(os.path.sep)[:-2]))
 from utils import log
-import pdb
 import pickle
 import common_args
 
 def parse_args():
-    parser = argparse.ArgumentParser()
+    parser = ConfigParser()
 
     common_args.add_common_args(parser)
 
@@ -29,7 +28,7 @@ def parse_args():
     parser.add_argument('--no_validation', action='store_true', help='no validation is performed')
     parser.add_argument('--save_model_epochs', type=int, default=1, help='the number of epochs between model savings')
     parser.add_argument('--print_loss_every', type=int, default=None, help='Print the loss every n epochs')
-    parser.add_argument('--num_workers', type=int, default=4, help='the number of data-loading threads')
+    parser.add_argument('--num_workers', type=int, default=2, help='the number of data-loading threads')
     parser.add_argument('--smoke', action='store_true')
     parser.add_argument('--seed', type=int, default=0)
     parser.add_argument('--filter', type=str)
@@ -39,13 +38,15 @@ def parse_args():
     parser.add_argument('--learning_rate', type=float, default=3e-5)
     parser.add_argument('--momentum', type=float, default=0.9)
     parser.add_argument('--batchsize', type=int, default=128)
-    parser.add_argument('--l2', type=float, default=1e-6)
+    parser.add_argument('--l2', type=float, default=1e-4)
     parser.add_argument('--lr_reduce_patience', type=int, default=3)
-    parser.add_argument('--lr_reduce_steps', default=3, type=int, help='the number of steps before reducing the learning rate \
+    parser.add_argument('--lr_reduce_steps', default=2, type=int, help='the number of steps before reducing the learning rate \
                                                              (only applicable when no_validation == True)')
+    parser.add_argument('--gamma', default=0.1, type=float)
+
 
     opts = parser.parse_args()
-    log(opts)
+
 
     torch.manual_seed(opts.seed)
     torch.backends.cudnn.deterministic = True

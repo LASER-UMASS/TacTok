@@ -116,6 +116,7 @@ class Agent:
         log(f'training with teacher forcing {self.opts.teacher_forcing}, learning rate {lr}..')
 
         bar = ProgressBar(max_value=len(self.dataloader['train']))
+        total_epoch_loss = 0.0
         loss_since_print = 0.0
         for i, data_batch in enumerate(self.dataloader['train']):
             use_teacher_forcing = random() < self.opts.teacher_forcing
@@ -129,6 +130,7 @@ class Agent:
             bar.update(i)
             if self.opts.smoke and i == 11:
                 break
+            total_epoch_loss += loss.item()
             if self.opts.print_loss_every is not None:
                 loss_since_print += loss.item()
                 if (i + 1) % self.opts.print_loss_every == 0:
@@ -137,7 +139,7 @@ class Agent:
                     print(f"loss: {avg_loss_since_print}", file=sys.stderr)
                     sys.stderr.flush()
 
-        log('\ntraining losses: %f' % loss)
+        log('\nAverage training loss: %f' % (total_epoch_loss / len(self.dataloader['train'])))
 
 
     def valid(self, n_epoch):
