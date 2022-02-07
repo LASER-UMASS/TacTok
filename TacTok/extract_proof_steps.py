@@ -10,10 +10,13 @@ from functools import partial
 from syntax import SyntaxConfig
 from gallina import GallinaTermParser
 from lark.exceptions import UnexpectedCharacters, ParseError
-from utils import iter_proofs, SexpCache
+from utils import iter_proofs, iter_file_proofs, SexpCache, get_proj
 from args import ConfigParser
+import argparse
 from hashlib import md5
 from agent import filter_env
+import string
+from typing import List
 
 sexp_cache = SexpCache('../sexp_cache', readonly=True)
 
@@ -42,6 +45,14 @@ def tactic2actions(tac_str):
     tree.traverse_pre(gather_actions)
     return actions
 
+rem_punc = string.punctuation.replace('\'','').replace('_', '')
+table = str.maketrans('', '', rem_punc)
+
+def tokenize_text(raw_text: str) -> List[str]:
+	without_punc = raw_text.translate(table)
+	words = without_punc.split()
+	return words
+
 projs_split = json.load(open('../projs_split.json'))
 proof_steps = {'train': [], 'valid': [], 'test': []}
 
@@ -61,7 +72,7 @@ def process_proof(term_parser, filename, proof_data):
     if args.filter and not md5(filename.encode()).hexdigest().startswith(args.filter):
         return
 
-    proj = filename.split(os.path.sep)[2]
+    proj = get_proj(filename)
     if proj in projs_split['projs_train']:
         split = 'train'
     elif proj in projs_split['projs_valid']:
@@ -69,10 +80,14 @@ def process_proof(term_parser, filename, proof_data):
         if is_synthetic:
             return
     else:
+        assert proj in projs_split['projs_test']
         split = 'test'
         if is_synthetic:
             return
 
+    seq_raw = [] # list of strings, each string is a command
+    seq_proc_separated = [] # list of lists of strings, each string is a token
+    seq_proc_complete = [] # list of strings, each string is a token
     for i, step in enumerate(proof_data['steps']):
         # consider only tactics
         if step['command'][1] in ['VernacEndProof', 'VernacBullet', 'VernacSubproof', 'VernacEndSubproof']:
@@ -102,14 +117,23 @@ def process_proof(term_parser, filename, proof_data):
                                    'env': env,
                                    'local_context': local_context, 
                                    'goal': goal,
-                                   'tactic': {'text': tac_str, 'actions': actions},})
+                                   'tactic': {'text': tac_str, 'actions': actions},
+                                   # TacTok features
+                                   'prev_strings': list(seq_raw),
+                                   'prev_tactic_list': list(seq_proc_separated),
+                                   'prev_tokens': list(seq_proc_complete),})
         if is_synthetic:
             proof_steps[split][-1]['is_synthetic'] = True
             proof_steps[split][-1]['goal_id'] = proof_data['goal_id']
             proof_steps[split][-1]['length'] = proof_data['length']
         else:
             proof_steps[split][-1]['is_synthetic'] = False
-       
+
+        # Update sequence state (TacTok features)
+        seq_raw.append(tac_str)
+        text_words = tokenize_text(tac_str)
+        seq_proc_separated.append(text_words)
+        seq_proc_complete += text_words
 
 if __name__ == '__main__':
     arg_parser = ConfigParser(description='Extract the proof steps from CoqGym for trainig ASTactic via supervised learning')
@@ -120,6 +144,8 @@ if __name__ == '__main__':
     arg_parser.add_argument('--no_paths', action='store_false', dest='include_paths', help='do not include the paths of definitions and theorems in the model')
     arg_parser.add_argument('--data_root', type=str, default='../data',
                                 help='The folder for CoqGym')
+    arg_parser.add_argument('--file', type=str, default=None,
+                            help='The file to extract')
     arg_parser.add_argument('--coq_projects', type=str, default='../coq_projects',
                                 help='The folder for the coq projects')
     arg_parser.add_argument('--output', type=str, default='./proof_steps/',
@@ -131,8 +157,12 @@ if __name__ == '__main__':
     syn_conf = SyntaxConfig(args.include_locals, args.include_defs, args.include_paths, args.include_constructor_names)
     term_parser = GallinaTermParser(args.coq_projects, syn_conf, caching=True, use_serapi=True)
 
-    iter_proofs(args.data_root, partial(process_proof, term_parser), include_synthetic=False,
-                show_progress=True, proj_callback=term_parser.load_project)
+    if args.file:
+        iter_file_proofs(args.file, partial(process_proof, term_parser), include_synthetic=False,
+                         proj_callback=term_parser.load_project)
+    else:
+        iter_proofs(args.data_root, partial(process_proof, term_parser), include_synthetic=False,
+                    show_progress=True, proj_callback=term_parser.load_project)
     print(f"{num_empty_goal} proof steps discarded because of an empty goal")
     print(f"{num_no_parse} proof steps discarded because of parsing issues")
     print(f"{num_discarded} proof steps discarded total")

@@ -6,7 +6,7 @@ from args import ConfigParser
 import json
 import os
 import sys
-sys.setrecursionlimit(100000)
+sys.setrecursionlimit(10000000)
 sys.path.append(os.path.normpath(os.path.dirname(os.path.realpath(__file__))))
 sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../')))
 from hashlib import md5
