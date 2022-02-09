@@ -32,8 +32,7 @@ git status > ${OUTDIR}/gstatus.txt
 git diff > ${OUTDIR}/gdiff.txt
 echo "CACHED" >> ${OUTDIR}/gdiff.txt
 git diff --cached >> ${OUTDIR}/gdiff.txt
-echo "$@" > ${OUTDIR}/flags.txt
 
 cd $TT_DIR/TacTok
 echo "Running main.py"
-python main.py --no_validation --exp_id=${EVAL_ID}-${TAG} $@
+python main.py --no_validation --exp_id=${EVAL_ID}-${TAG} --export_config=${OUTDIR}/flags.json $@
