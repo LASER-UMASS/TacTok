@@ -3,10 +3,12 @@ SFLAGS="-u $USER -h -r"
 
 set -e
 function usage {
-        echo "Usage: $(basename $0) [-b] eval_id .." 2>&1
-        echo 'Show the number of swarm tasks left.'
-        echo '   -b          Show a tqdm-based progress bar'
-        echo ' eval_id ..    A list of evaluation ids to check for. If empty, will check for all tasks'
+        echo "Usage: $(basename $0) [-b] [-B <total>] [-s <num-left>] eval_id .." 2>&1
+        echo 'Show the number of swarm tasks left.' 2>&1
+        echo '   -b             Show a tqdm-based progress bar with an inferred total' 2>&1
+        echo '   -B <total>     Show a tqdm-based progress bar with a fixed total' 2>&1
+        echo '   -s <num-left>  Stop the bar when there are only <num-left> tasks left' 2>& 1
+        echo ' eval_id ..       A list of evaluation ids to check for. If empty, will check for all tasks' 2>&1
         exit 1
 }
 TQDM=false
