@@ -40,7 +40,7 @@ fi
 
 set +e
 for proj_idx in {0..26}; do
-    $TT_DIR/swarm/evaluate-proj-parallel.sh ${EVAL_ID} $proj_idx "$@"
+    $TT_DIR/swarm/evaluate-proj-parallel.sh ${EVAL_ID} $proj_idx --parallel --export_config=${DEST}/flags.json "$@"
 done
 
 set -x

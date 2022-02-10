@@ -16,11 +16,10 @@ from agent import Agent
 from models.prover import Prover
 import pdb
 import pickle
-import common_args
 
 if __name__ == '__main__':
     parser = ConfigParser()
-    common_args.add_common_args(parser)
+    parser.add_common_args()
     parser.add_argument('method', type=str)
     parser.add_argument('eval_id', type=str)
     parser.add_argument('--datapath', type=str, default='../data')

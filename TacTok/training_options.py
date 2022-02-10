@@ -9,12 +9,10 @@ from args import ConfigParser
 sys.path.append(os.path.sep.join(__file__.split(os.path.sep)[:-2]))
 from utils import log
 import pickle
-import common_args
 
 def parse_args():
     parser = ConfigParser()
-
-    common_args.add_common_args(parser)
+    parser.add_common_args()
 
     # experimental setup
     parser.add_argument('--include_synthetic', action='store_true')
