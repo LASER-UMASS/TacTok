@@ -181,13 +181,13 @@ camldevfiles: $(MERLINFILES) META.coq
 META.coq.in $(MERLININFILES): ;
 
 .merlin: .merlin.in
-	cp -a "$<" "$@"
+	cp -dR "$<" "$@"
 
 %/.merlin: %/.merlin.in
-	cp -a "$<" "$@"
+	cp -dR "$<" "$@"
 
 META.coq: META.coq.in
-	cp -a "$<" "$@"
+	cp -dR "$<" "$@"
 
 ###########################################################################
 # Cleaning

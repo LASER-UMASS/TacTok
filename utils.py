@@ -201,7 +201,15 @@ def update_env(env, env_delta):
     env['inductives'] = [induct for induct in env['inductives'] if induct['physical_path'] not in to_remove]
     return env
 
-def iter_proofs_in_file(callback, filename, file_data, include_synthetic=False):
+def iter_file_proofs(filename, callback, include_synthetic=False, proj_callback=None):
+    with open(filename) as f:
+        file_data = json.load(f)
+        if proj_callback:
+            proj_callback(get_proj(filename))
+        print(f"{len(file_data)} steps in file")
+        iter_proofs_in_file(callback, filename, file_data, include_synthetic)
+
+def iter_proofs_in_file(callback, filename, file_data, include_synthetic=False, show_progress=False):
     env = {'constants': [], 'inductives': []}
     for proof_data in file_data['proofs']:
         env = update_env(env, proof_data['env_delta'])

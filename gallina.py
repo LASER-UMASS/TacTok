@@ -44,7 +44,7 @@ class GallinaTermParser:
             self.cache = {}
         self.serapi = None
         if use_serapi:
-            self.serapi = SerAPIWrapper(coq_projects_path)
+            self.serapi = SerAPIWrapper(coq_projects_path, timeout=30)
 
     def load_project(self, proj):
         self.serapi.load_project(proj)
