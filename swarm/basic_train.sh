@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-TT_DIR=$HOME/TacTok
+TT_DIR=$HOME/work/TacTok
 EVAL_ID=$1
 shift 1
 

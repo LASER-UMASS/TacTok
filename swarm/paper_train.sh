@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-TT_DIR=$HOME/TacTok
+TT_DIR=$HOME/work/TacTok
 
-FLAGS_DEFAULT="--num_epochs=3 --no-locals-file --max-ident-chunks=4 --bpe-merges=4096"
+FLAGS_DEFAULT="--num_epochs=3 --no-locals-file --max-ident-chunks=4 --bpe-merges=4096 --datapath=./alex-steps/proof_steps-2f27749"
 
 mkdir -p $TT_DIR/output/paper-train
 
@@ -29,9 +29,21 @@ train-experiment() (
 #        --cutoff_len=3
 
 # Tok + I
-train-experiment rtx8000-long paper-tok+i
+#train-experiment 1080ti-long paper-tok+i+talia+mem
+
+# Tok + I l2 experiment
+train-experiment m40-long paper-tok+i+l2-1 --l2=1e-01
+train-experiment m40-long paper-tok+i+l2-2 --l2=1e-02
+train-experiment 2080ti-long paper-tok+i+l2-3 --l2=1e-03
+train-experiment 2080ti-long paper-tok+i+l2-4 --l2=1e-04
+train-experiment 1080ti-long paper-tok+i+l2-5 --l2=1e-05
+train-experiment 1080ti-long paper-tok+i+l2-6 --l2=1e-06
 
 ## TECHNIQUES EXPERIMENT ##
+
+# Baseline
+#train-experiment rtx8000-long paper-tok \
+#         --max-ident-chunks=0 --no_defs --no_locals --no_constructors --no_paths
 
 # # Tok + Paths
 # train-experiment m40-long paper-tok+paths \
@@ -71,7 +83,10 @@ train-experiment rtx8000-long paper-tok+i
 # ## MERGED IDENTS ##
 # train-experiment titanx-long paper-tok+merged \
 #        --merge_vocab
-# 
+
+#train-experiment rtx8000-long paper-tok+merged-no-bpe \
+#         --merge_vocab --max-ident-chunks=0
+ 
 # ## GLOBAL VOCAB SIZE ##
 # for vocab_size in {20..900..20}; do
 #     train-experiment 1080ti-long paper-globals-vsize-${vocab_size} \
