@@ -23,7 +23,10 @@ if [ -d $DEST ]; then
             set -x
             ${TT_DIR}/swarm/show-tasks-left.sh -B 661 -s 20 ${EVAL_ID}
             set +x
-            ls $TT_DIR/TacTok/evaluation/${EVAL_ID}/results*.json &> /dev/null || echo "Evaluation failed for all files, exiting..." && exit 1
+            if ! ls $TT_DIR/TacTok/evaluation/${EVAL_ID}/results*.json &> /dev/null; then
+                echo "Evaluation failed for all files, exiting..."
+                exit 1
+            fi
             scancel -n ${EVAL_ID}-evaluate-file
             $TT_DIR/swarm/rerun-missing-proofs.sh -N 4000 ${EVAL_ID} "$@"
             set -x
@@ -45,8 +48,11 @@ done
 
 set -x
 ${TT_DIR}/swarm/show-tasks-left.sh -B 661 -s 20 ${EVAL_ID}
-ls $TT_DIR/TacTok/evaluation/${EVAL_ID}/results*.json &> /dev/null || echo "Evaluation failed for all files, exiting..." && exit 1
 set +x
+if ! ls $TT_DIR/TacTok/evaluation/${EVAL_ID}/results*.json &> /dev/null; then
+    echo "Evaluation failed for all files, exiting..."
+    exit 1
+fi
 scancel -n ${EVAL_ID}-evaluate-file
 ${TT_DIR}/swarm/cancel-all-tasks.sh ${EVAL_ID}
 ${TT_DIR}/swarm/rerun-missing-proofs.sh -N 4000 ${EVAL_ID} "$@"
