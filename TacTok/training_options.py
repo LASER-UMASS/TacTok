@@ -33,6 +33,9 @@ def parse_args():
     parser.add_argument('--seed', type=int, default=0)
     parser.add_argument('--filter', type=str)
 
+    parser.add_argument('--export-ordering', default=None)
+    parser.add_argument('--import-ordering', default=None)
+
     # optimization
     parser.add_argument('--optimizer', type=str, default='RMSprop')
     parser.add_argument('--learning_rate', type=float, default=3e-5)
