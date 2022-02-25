@@ -4,6 +4,7 @@ from training_options import parse_args
 import random
 from progressbar import ProgressBar
 import os
+import os.path
 import sys
 sys.setrecursionlimit(100000)
 import pickle
@@ -12,6 +13,7 @@ import numpy as np
 from glob import glob
 import json
 import pdb
+from pathlib import Path
 
 
 class ProofStepsData(Dataset):
@@ -27,7 +29,21 @@ class ProofStepsData(Dataset):
                                glob(os.path.join(opts.datapath, 'valid/*.pickle'))
         if opts.max_tuples is not None:
             self.proof_steps = self.proof_steps[:opts.max_tuples]
-        random.shuffle(self.proof_steps)
+        if opts.import_ordering and split == 'train_valid':
+            with open(opts.import_ordering, 'r') as f:
+                ordering = [path.strip() for path in f]
+            for path in ordering:
+                fullpath = os.path.join(opts.datapath, path)
+                assert os.path.exists(fullpath), f"File in ordering isn't present in data! {fullpath}"
+            assert len(ordering) > 0
+            self.proof_steps = [os.path.join(opts.datapath, step_path) for step_path in ordering]
+        else:
+            random.shuffle(self.proof_steps)
+        if opts.export_ordering and split == 'train_valid':
+            with open(opts.export_ordering, 'w') as f:
+                for filename in self.proof_steps:
+                    parts = Path(filename).parts
+                    print(os.path.join(*parts[-2:]), file=f)
         print('%d proof steps in %s' % (len(self), split))
 
 
