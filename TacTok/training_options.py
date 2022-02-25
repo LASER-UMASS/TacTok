@@ -94,8 +94,7 @@ def parse_args():
         os.makedirs(opts.checkpoint_dir)
 
     opts.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    if opts.device.type == 'cpu':
-        log('using CPU', 'WARNING')
+    assert opts.device.type != 'cpu'
 
     if (not opts.no_validation) and (opts.lr_reduce_steps is not None):
         log('--lr_reduce_steps is applicable only when no_validation == True', 'ERROR')
