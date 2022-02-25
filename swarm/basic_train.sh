@@ -4,13 +4,13 @@ TT_DIR=$HOME/TacTok
 EVAL_ID=$1
 shift 1
 
-NUM_TRAIN_STEPS=$(ls $TT_DIR/TacTok/processed/proof_steps/train | wc -l)
+NUM_TRAIN_STEPS=$(ls $TT_DIR/TacTok/proof_steps/train | wc -l)
 EXPECTED_STEPS_TRAIN=121644
 if [[ ${NUM_TRAIN_STEPS} -ne ${EXPECTED_STEPS_TRAIN} ]] ; then
     echo "Wrong number of proof steps in $TT_DIR/TacTok/processed/proof_steps/train/; expected ${EXPECTED_STEPS_TRAIN}, got ${NUM_TRAIN_STEPS}"
     exit 1
 fi
-NUM_VALID_STEPS=$(ls $TT_DIR/TacTok/processed/proof_steps/valid | wc -l)
+NUM_VALID_STEPS=$(ls $TT_DIR/TacTok/proof_steps/valid | wc -l)
 EXPECTED_STEPS_VALID=68180
 if [[ ${NUM_VALID_STEPS} -ne ${EXPECTED_STEPS_VALID} ]] ; then
     echo "Wrong number of proof steps in $TT_DIR/TacTok/processed/proof_steps/train/; expected ${EXPECTED_STEPS_VALID}, got ${NUM_VALID_STEPS}"
