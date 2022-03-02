@@ -13,7 +13,7 @@ from tqdm import tqdm
 import fcntl
 import time
 from lark import Tree
-from typing import Any, Dict
+from typing import Any, Dict, List
 from hashlib import sha256
 
 class LarkEncoder(json.JSONEncoder):
@@ -87,12 +87,13 @@ parser.add_argument("--to-hashes", action="store_true")
 parser.add_argument("--projs_split", default="projs_split.json")
 args = parser.parse_args()
 
-paths = glob.glob(os.path.join(args.indir, "**/*", recursive=True))
 with multiprocessing.Pool(args.num_threads) as pool:
     if args.to_hashes:
+        paths = glob.glob(os.path.join(args.indir, "**/*.json"), recursive=True)
         projs_split = json.load(open(args.projs_split))
         res = list(tqdm(pool.imap(functools.partial(to_hashes, args, projs_split), paths), 
                         total=len(paths)))
     else:
+        paths = glob.glob(os.path.join(args.indir, "**/*.pickle"), recursive=True)
         res = list(tqdm(pool.imap(functools.partial(to_file, args), paths), total=len(paths)))
   
