@@ -64,7 +64,7 @@ if __name__ == '__main__':
     	results_dict, n_theorems = get_results_dict(d)
     	results_sets_dict[d] = combine(results_dict)
     	num_theorems_list.append(n_theorems)
-    assert len(set(num_theorems_list)) <= 1 # all the same number of theorems
+    # assert len(set(num_theorems_list)) <= 1 # all the same number of theorems
     num_theorems = num_theorems_list[0]
     results_set = combine_results(results_sets_dict)
     success_rate = get_success_rate(results_set, num_theorems)
