@@ -21,7 +21,7 @@ if [ -d $DEST ]; then
             [yY][eE][sS]|[yY])
             $TT_DIR/swarm/rerun-missing-files.py ${EVAL_ID} "$@"
             set -x
-            ${TT_DIR}/swarm/show-tasks-left.sh -B 661 -s 20 ${EVAL_ID}
+            ${TT_DIR}/swarm/show-tasks-left.sh -B 661 -s 10 ${EVAL_ID}
             set +x
             if ! ls $TT_DIR/TacTok/evaluation/${EVAL_ID}/results*.json &> /dev/null; then
                 echo "Evaluation failed for all files, exiting..."
@@ -30,7 +30,7 @@ if [ -d $DEST ]; then
             scancel -n ${EVAL_ID}-evaluate-file
             $TT_DIR/swarm/rerun-missing-proofs.sh -N 4000 ${EVAL_ID} "$@"
             set -x
-            ${TT_DIR}/swarm/show-tasks-left.sh -b  ${EVAL_ID}
+            ${TT_DIR}/swarm/show-tasks-left.sh -b -s 20 ${EVAL_ID}
             set +x
             exit 0 ;;
             *)
@@ -57,5 +57,5 @@ scancel -n ${EVAL_ID}-evaluate-file
 ${TT_DIR}/swarm/cancel-all-tasks.sh ${EVAL_ID}
 ${TT_DIR}/swarm/rerun-missing-proofs.sh -N 4000 ${EVAL_ID} "$@"
 set -x
-${TT_DIR}/swarm/show-tasks-left.sh -b  ${EVAL_ID}
+${TT_DIR}/swarm/show-tasks-left.sh -b -s 20 ${EVAL_ID}
 set +x
