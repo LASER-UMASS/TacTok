@@ -12,6 +12,7 @@ def main() -> None:
   parser.add_argument("results_dir")
   parser.add_argument("reference_results_dir")
   parser.add_argument("-q", "--quiet", action="store_true")
+  parser.add_argument("-e", "--estimated", action="store_true")
   parser.add_argument("--no-skip-15", action="store_false", dest="skip_15")
   args = parser.parse_args()
   results = get_results(args, args.results_dir)
@@ -27,7 +28,10 @@ def main() -> None:
   result_succ_ratio = get_succ_ratio({key: success for key, success in results.items() if key in ref_results})
   print((f"{(result_succ_ratio - ref_succ_ratio)*100:+.2f} "
          f"({result_succ_ratio*100:.2f}% vs {ref_succ_ratio*100:.2f}%)"))
-
+  if args.estimated:
+      ref_finished_succ_ratio = get_succ_ratio(ref_results)
+      estimated_finish = (result_succ_ratio / ref_succ_ratio) * ref_finished_succ_ratio
+      print(f"Estimated finish: {estimated_finish*100:.2f}%")
 
 if __name__ == '__main__':
   main()
