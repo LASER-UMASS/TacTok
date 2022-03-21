@@ -38,6 +38,7 @@ class ProofStepsData(Dataset):
             assert len(ordering) > 0
             self.proof_steps = [os.path.join(opts.datapath, step_path) for step_path in ordering]
         else:
+            self.proof_steps.sort(key=os.path.basename)
             random.shuffle(self.proof_steps)
         if opts.export_ordering and split == 'train_valid':
             with open(opts.export_ordering, 'w') as f:
