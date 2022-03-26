@@ -16,6 +16,12 @@ import pdb
 from pathlib import Path
 
 
+def seed_worker(worker_id):
+    worker_seed = torch.initial_seed() % 2**32
+    np.random.seed(worker_seed)
+    random.seed(worker_seed)
+
+
 class ProofStepsData(Dataset):
 
     def __init__(self, split, opts):
@@ -91,8 +97,10 @@ def create_dataloader(split, opts):
         return data_batch
 
     ds = ProofStepsData(split, opts)
+    g = torch.Generator()
+    g.manual_seed(opts.seed)
     return DataLoader(ds, opts.batchsize, shuffle=split.startswith('train'), collate_fn=merge,
-                      num_workers=opts.num_workers)
+                      num_workers=opts.num_workers,worker_init_fn=seed_worker, generator=g)
 
 
 if __name__ == '__main__':
