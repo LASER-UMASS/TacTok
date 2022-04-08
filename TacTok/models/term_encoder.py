@@ -212,7 +212,7 @@ class TermEncoder(nn.Module):
     def should_bpe_encode(self, node):
         if SyntaxConfig.is_local(node) and self.opts.include_locals:
             return True
-        if SyntaxConfig.is_ident(node) and self.opts.include_defs:
+        # if SyntaxConfig.is_ident(node) and self.opts.include_defs:
             return True
         if SyntaxConfig.is_constructor(node) and self.opts.include_constructor_names:
             return True
