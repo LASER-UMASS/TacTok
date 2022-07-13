@@ -163,24 +163,24 @@ class TermEncoder(nn.Module):
         if opts.case_insensitive_idents:
             occurances = Counter({word.lower(): count for (word,count) in occurances.items()})
 
-        vocab = None
+        subwords_vocab = None
         occurances_hash = hashlib.sha256(json.dumps(occurances, sort_keys=True).encode()).hexdigest()
         if opts.load_subwords and os.path.exists(opts.load_subwords):
             with open(opts.load_subwords, 'r') as f:
-                stamp, num_merges, vocab = json.load(f)
+                stamp, num_merges, subwords_vocab = json.load(f)
             if stamp != occurances_hash:
                 log("Warning: Loaded subwords don't match the occurances we loaded, regenerating")
-                vocab = None
+                subwords_vocab = None
             if num_merges != opts.bpe_merges:
                 log("Warning: Loaded subwords don't match the num merges we were passed, regenerating")
-                vocab = None
-        if vocab == None:
-            vocab = get_bpe_vocab(occurances, opts.bpe_merges)
+                subwords_vocab = None
+        if subwords_vocab == None:
+            subwords_vocab = get_bpe_vocab(occurances, opts.bpe_merges)
             if opts.save_subwords:
                 with open(opts.save_subwords, 'w') as f:
-                    json.dump((occurances_hash, opts.bpe_merges, vocab), f)
+                    json.dump((occurances_hash, opts.bpe_merges, subwords_vocab), f)
         self.name_tokenizer = \
-            LongestMatchTokenizer(vocab,
+            LongestMatchTokenizer(subwords_vocab,
                                   include_unks=opts.include_unks)
 
         self.name_encoder = nn.RNN(self.name_tokenizer.vocab_size + 1,
