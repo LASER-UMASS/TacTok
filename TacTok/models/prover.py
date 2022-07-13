@@ -24,7 +24,7 @@ class Prover(nn.Module):
         self.tac_vocab = pickle.load(open(opts.tac_vocab_file, 'rb'))
         self.cutoff_len = opts.cutoff_len
         self.include_prev_tactics = opts.include_prev_tactics
-        
+
     def create_tactic_batch(self, tok_seq):
         mod_tok_seq = []
         if '<unk>' in self.tac_vocab:
@@ -57,7 +57,7 @@ class Prover(nn.Module):
         j = 0
         for n in range(batchsize):
             size = len(environment[n])
-            environment_embeddings.append(torch.cat([torch.zeros(size, 3, device=self.opts.device), 
+            environment_embeddings.append(torch.cat([torch.zeros(size, 3, device=self.opts.device),
                                                      all_embeddings[j : j + size]], dim=1))
             environment_embeddings[-1][:, 0] = 1.0
             j += size
@@ -65,7 +65,7 @@ class Prover(nn.Module):
         context_embeddings = []
         for n in range(batchsize):
             size = len(local_context[n])
-            context_embeddings.append(torch.cat([torch.zeros(size, 3, device=self.opts.device), 
+            context_embeddings.append(torch.cat([torch.zeros(size, 3, device=self.opts.device),
                                                  all_embeddings[j : j + size]], dim=1))
             context_embeddings[-1][:, 1] = 1.0
             j += size
@@ -93,11 +93,11 @@ class Prover(nn.Module):
     def forward(self, environment, local_context, goal, actions, teacher_forcing, tok_seq):
         environment_embeddings, context_embeddings, goal_embeddings, seq_embeddings = \
           self.embed_terms(environment, local_context, goal, tok_seq)
-        environment = [{'idents': [v['qualid'] for v in env], 
-                        'embeddings': environment_embeddings[i], 
+        environment = [{'idents': [v['qualid'] for v in env],
+                        'embeddings': environment_embeddings[i],
                         'quantified_idents': [v['ast'].quantified_idents for v in env]}
                           for i, env in enumerate(environment)]
-        local_context = [{'idents': [v['ident'] for v in context], 
+        local_context = [{'idents': [v['ident'] for v in context],
                           'embeddings': context_embeddings[i],
                           'quantified_idents': [v['ast'].quantified_idents for v in context]}
                             for i, context in enumerate(local_context)]

@@ -89,7 +89,7 @@ class InputOutputUpdateGate(nn.Module):
         nn.init.uniform_(self.W, -k, k)
         self.b = nn.Parameter(torch.Tensor(hidden_dim))
         nn.init.uniform_(self.b, -k, k)
-     
+
 
     def forward(self, xh):
         return self.nonlinear(F.linear(xh, self.W, self.b))
@@ -128,7 +128,7 @@ class ForgetGates(nn.Module):
             f_gates = torch.sigmoid(Wx[j] + Uh[i : i + len(h)])
             i += len(h)
             c_remain[j] = (f_gates * torch.stack(c_children[j])).sum(dim=0)
-       
+
         return c_remain
 
 
@@ -150,7 +150,7 @@ class TermEncoder(nn.Module):
         # By default, load the vocabulary passed in --globals-file; this defaults to the
         # globals vocabulary but can be set to any other by command line.
         occurances = pickle.load(open(opts.globals_file, 'rb'))
-        
+
         # Non-default vocabularies
         if opts.merge_vocab:
             # If passed --merge_vocab, use the merged vocabulary instead
@@ -188,6 +188,7 @@ class TermEncoder(nn.Module):
 
     def get_vocab_idx(self, node, localnodes, paths, cnames):
         data = node.data
+
         vocab = self.vocab
         merge_vocab = self.opts.merge_vocab
         if data in vocab:
@@ -257,7 +258,7 @@ class TermEncoder(nn.Module):
         localnodes = set()
         paths = set()
         cnames = set()
-        
+
         def get_metadata(node):
             height2nodes[node.height].add(node)
             if self.syn_conf.include_paths and SyntaxConfig.is_path(node):

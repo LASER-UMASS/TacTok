@@ -119,7 +119,7 @@ if __name__ == '__main__':
         #print('cuda memory allocated before file: ', torch.cuda.memory_allocated(opts.device), file=sys.stderr)
         results.extend(agent.evaluate(file, opts.proof))
 
-    
+
     iter_coq_files(files, add_results, show_progress=True, proj_callback=agent.term_parser.load_project, get_data=False)
 
     oup_dir = os.path.join(opts.output_dir, opts.eval_id)
