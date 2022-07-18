@@ -32,7 +32,8 @@ if __name__ == '__main__':
     parser.add_argument('--file_idx', type=int)
     parser.add_argument('--proj_idx', type=int)
     parser.add_argument('--filter', type=str)
-    parser.add_argument('--path', type=str)
+    parser.add_argument('--path', type=str, default=None)
+    parser.add_argument('--epoch', type=str, default='002')
     parser.add_argument('--output_dir', type=str, default='evaluation')
     parser.add_argument('--max_num_tactics', type=int, default=300)
     parser.add_argument('--timeout', type=int, default=600)
@@ -82,6 +83,8 @@ if __name__ == '__main__':
 
     if 'ours' in opts.method:
         model = Prover(opts)
+        if opts.path == None:
+            opts.path = f'runs/{opts.eval_id}/checkpoints/model_{opts.epoch}.pth'
         log('loading model checkpoint from %s..' % opts.path)
         if opts.device.type == 'cpu':
             checkpoint = torch.load(opts.path, map_location='cpu')
