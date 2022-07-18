@@ -1,16 +1,19 @@
 #!/usr/bin/env bash
 
 TT_DIR=$HOME/work/TacTok
-REMOTE_TT_DIR=gypsum.cs.umass.edu:TacTok
+REMOTE_MACHINE=gypsum.cs.umass.edu
+REMOTE_RELATIVE_DIR=TacTok
+REMOTE_TT_DIR=${REMOTE_MACHINE}:${REMOTE_RELATIVE_DIR}
 
 FLAGS_DEFAULT="--no-locals-file --bpe-merges=4096"
 
 run-experiment () (
     EVAL_ID=$1
     shift 1
-    rsync -avzz ${REMOTE_TT_DIR}/TacTok/runs/${EVAL_ID} \
+    EVAL_TAG=$(ssh ${REMOTE_MACHINE} ls -t "${REMOTE_RELATIVE_DIR}/TacTok/runs/${EVAL_ID}-*/checkpoints/model_*.pth" | head -n 1 | sed 's/.*\('${EVAL_ID}'-[^\/]*\)\/.*/\1/')
+    rsync -avzz ${REMOTE_TT_DIR}/TacTok/runs/${EVAL_TAG} \
           ${TT_DIR}/TacTok/runs/
-    ${TT_DIR}/swarm/evaluate-test.sh ${EVAL_ID} ${FLAGS_DEFAULT} "$@"
+    ${TT_DIR}/swarm/evaluate-test.sh ${EVAL_TAG} ${FLAGS_DEFAULT} "$@"
 )
 
 ## MAIN EXPERIMENT ##
