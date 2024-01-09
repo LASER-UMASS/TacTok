@@ -45,9 +45,7 @@ This generates a `*.json` file in `./data/` corresponding to each `*.meta` file.
 
 ### Download the CoqGym dataset
 
-1. Download the CoqGym dataset (you do not need to extract proofs from Coq projects)
-[here](https://drive.google.com/drive/folders/149m_17VkYYkl0kdSB4AI8zodCuTmPaA6?usp=sharing)
-2. Unzip the data and set the paths: `python unzip_data.py`
+To download the CoqGym dataset, please refer to the [CoqGym](https://github.com/princeton-vl/CoqGym) repo for the latest instructions.
 
 ### Training Examples (proof steps)
 
